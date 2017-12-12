@@ -4,7 +4,6 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.utils.data as Data
 import torchvision   # database module
-import matplotlib.pyplot as plt
 
 torch.manual_seed(1)   # reproducible
 
