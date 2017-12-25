@@ -5,6 +5,9 @@ from torch.autograd import Variable
 import torchvision
 import torch.utils.data as Data
 import matplotlib.pyplot as plt
+import time
+# 设置全局cudnn不可用
+# torch.backends.cudnn.enabled = False
 
 torch.manual_seed(1)  # reproducible
 
@@ -35,8 +38,8 @@ train_loader = Data.DataLoader(dataset=train_data, batch_size=BATCH_SIZE, shuffl
 # convert test data into Variable
 test_data = torchvision.datasets.MNIST(root='./mnist/', train=False, transform=torchvision.transforms.ToTensor)
 # shape (2000, 28, 28) value in range(0, 1)
-test_x = Variable(test_data.test_data, volatile=True).type(torch.FloatTensor)[:2000] / 255.
-test_y = test_data.test_labels.numpy().squeeze()[:2000]   # convert to numpy array
+test_x = Variable(test_data.test_data, volatile=True).type(torch.FloatTensor)[:2000].cuda() / 255.
+test_y = test_data.test_labels[:2000].cuda()   # convert to numpy array
 
 # RNN architecture
 class RNN(nn.Module):
@@ -66,8 +69,10 @@ class RNN(nn.Module):
         return out
 
 rnn = RNN()
+rnn.cuda()
 print(rnn)
 
+start_time = time.time()
 # training
 optimizer = torch.optim.Adam(rnn.parameters(), lr=LR)
 loss_func = nn.CrossEntropyLoss()
@@ -76,8 +81,8 @@ for epoch in range(EPOCH):
     for step, (x, y) in enumerate(train_loader):
         # print(x)  # 64x1x28x28
         # print(y)  # 64
-        b_x = Variable(x.view(-1, 28, 28))  # reshape x to (batch, time_step, input_size)
-        b_y = Variable(y)
+        b_x = Variable(x.view(-1, 28, 28)).cuda()  # reshape x to (batch, time_step, input_size)
+        b_y = Variable(y).cuda()
 
         output = rnn(b_x)   # rnn output
         loss = loss_func(output, b_y)
@@ -87,10 +92,11 @@ for epoch in range(EPOCH):
 
         if step % 50 == 0:
             test_output = rnn(test_x)    # (samples, time_step, input_size)
-            pred_y = torch.max(test_output, 1)[1].data.numpy().squeeze()
-            accuracy = sum(pred_y == test_y) / float(test_y.size)
+            pred_y = torch.max(test_output, 1)[1].cuda().data.squeeze()
+            accuracy = sum(pred_y == test_y) / float(test_y.size(0))
             print('Epoch: ', epoch, '| Step: ', step, '| Train loss: %.4f' %
-                  loss.data.numpy(), '| Test accuracy %.2f' % accuracy)
-
-
+                  loss.data[0], '| Test accuracy %.2f' % accuracy)
+end_time = time.time()
+print("total cost time:", end_time - start_time)
+# not cudnn total cost time: 478.00118017196655
 
