@@ -44,8 +44,10 @@ net_droped = torch.nn.Sequential(
     torch.nn.Linear(N_HIDDEN, 1)
 )
 
-optimizer_overfit = torch.optim.Adam(net_overfitting.parameters(), lr=0.01)
-optimizer_dopout = torch.optim.Adam(net_droped.parameters(), lr=0.01)
+# optimizer_overfit = torch.optim.Adam(net_overfitting.parameters(), lr=0.01)
+# optimizer_dopout = torch.optim.Adam(net_droped.parameters(), lr=0.01)
+optimizer_overfit = torch.optim.RMSprop(net_overfitting.parameters(), lr=0.01)
+optimizer_dopout = torch.optim.RMSprop(net_droped.parameters(), lr=0.01)
 loss_func = torch.nn.MSELoss()
 
 # plotting

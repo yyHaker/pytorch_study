@@ -10,6 +10,7 @@ x = torch.unsqueeze(torch.linspace(-1, 1, 100), dim=1)  # x data tensor (100, 1)
 y = x.pow(2) + 0.2 * torch.rand(x.size())  # noisy y data tensor (100, 1)
 x, y = Variable(x), Variable(y)
 
+
 def save():
     net1 = torch.nn.Sequential(
         torch.nn.Linear(1, 10),
@@ -34,8 +35,10 @@ def save():
     plt.plot(x.data.numpy(), prediction.data.numpy(), 'r-', lw=5)
 
     # two ways to save the net
+
     torch.save(net1, './model/net.pkl')  # save entire net
     torch.save(net1.state_dict(), './model/net_params.pkl')  # save only the parameters
+
 
 def restore_net():
     # restore entire net1 to net2
@@ -47,6 +50,7 @@ def restore_net():
     plt.title('Net2')
     plt.scatter(x.data.numpy(), y.data.numpy())
     plt.plot(x.data.numpy(), prediction.data.numpy(), 'r-', lw=5)
+
 
 def restore_params():
     # restore only the parameters in net1 to net3

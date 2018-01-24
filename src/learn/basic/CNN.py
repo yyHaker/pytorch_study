@@ -28,6 +28,7 @@ test_data = torchvision.datasets.MNIST(root='./mnist/', train=False)
 test_x = Variable(torch.unsqueeze(test_data.test_data, dim=1), volatile=True).type(torch.FloatTensor)[:2000].cuda()/255.
 test_y = test_data.test_labels[: 2000].cuda()
 
+
 # Network architecture
 class CNN(torch.nn.Module):
     def __init__(self):
