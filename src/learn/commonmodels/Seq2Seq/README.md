@@ -26,7 +26,7 @@ The repository also contains a simpler and faster variant of the attention mecha
 
 ## Results on English - French WMT14
 
-The following presents the model architecture and results obtained when training on the WMT14 English - French dataset. The training data is the english-french bitext from Europral-v7. The validation dataset is newstest2011
+The following presents the model architecture and results obtained when training on the WMT14 English - French dataset[http://www.statmt.org/wmt14/translation-task.html]. The training data is the english-french bitext from Europral-v7. The validation dataset is newstest2011
 
 The model was trained with following configuration
 

@@ -20,17 +20,15 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--config",
-    help="path to json config",
-    required=True
-)
+# 参数配置文件路径，必须输入该参数
+parser.add_argument("--config", help="path to json config", required=True)
 args = parser.parse_args()
 config_file_path = args.config
 config = read_config(config_file_path)
 experiment_name = hyperparam_string(config)
 save_dir = config['data']['save_dir']
 load_dir = config['data']['load_dir']
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -50,7 +48,7 @@ console.setFormatter(formatter)
 logging.getLogger('').addHandler(console)
 
 
-print 'Reading data ...'
+print('Reading data ...')
 
 src, trg = read_nmt_data(
     src=config['data']['src'],
@@ -89,7 +87,7 @@ logging.info('Found %d words in src ' % (src_vocab_size))
 logging.info('Found %d words in trg ' % (trg_vocab_size))
 
 weight_mask = torch.ones(trg_vocab_size).cuda()
-weight_mask[trg['word2id']['<pad>']] = 0
+weight_mask[trg['word2id']['<pad>']] = 0  # 不计算<pad>的loss
 loss_criterion = nn.CrossEntropyLoss(weight=weight_mask).cuda()
 
 if config['model']['seq2seq'] == 'vanilla':
@@ -165,9 +163,10 @@ elif config['training']['optimizer'] == 'sgd':
 else:
     raise NotImplementedError("Learning method not recommend for task")
 
-for i in xrange(1000):
+# training.....
+for i in range(1000):
     losses = []
-    for j in xrange(0, len(src['data']), batch_size):
+    for j in range(0, len(src['data']), batch_size):
 
         input_lines_src, _, lens_src, mask_src = get_minibatch(
             src['data'], src['word2id'], j,
@@ -181,6 +180,7 @@ for i in xrange(1000):
         decoder_logit = model(input_lines_src, input_lines_trg)
         optimizer.zero_grad()
 
+        # loss(x, class) = weights[class] * (-x[class] + log(\sum_j exp(x[j])))
         loss = loss_criterion(
             decoder_logit.contiguous().view(-1, trg_vocab_size),
             output_lines_trg.view(-1)
@@ -189,16 +189,15 @@ for i in xrange(1000):
         loss.backward()
         optimizer.step()
 
+        # every 'monitor_loss' step to monitor
         if j % config['management']['monitor_loss'] == 0:
             logging.info('Epoch : %d Minibatch : %d Loss : %.5f' % (
                 i, j, np.mean(losses))
             )
             losses = []
 
-        if (
-            config['management']['print_samples'] and
-            j % config['management']['print_samples'] == 0
-        ):
+        if (config['management']['print_samples'] and
+                        j % config['management']['print_samples'] == 0):
             word_probs = model.decode(
                 decoder_logit
             ).data.cpu().numpy().argmax(axis=-1)
@@ -256,3 +255,4 @@ for i in xrange(1000):
             experiment_name + '__epoch_%d' % (i) + '.model'), 'wb'
         )
     )
+# TODO : find the data and training use the model

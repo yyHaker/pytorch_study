@@ -398,8 +398,8 @@ class Seq2Seq(nn.Module):
         trg_emb_dim,   # 目标句子中单词向量维度
         src_vocab_size,
         trg_vocab_size,
-        src_hidden_dim,
-        trg_hidden_dim,
+        src_hidden_dim,  #
+        trg_hidden_dim,  #
         batch_size,
         pad_token_src,
         pad_token_trg,
@@ -424,6 +424,7 @@ class Seq2Seq(nn.Module):
         # If given, pads the output with zeros whenever it encounters the index
         self.pad_token_src = pad_token_src
         self.pad_token_trg = pad_token_trg
+        # self.src_hidden_dim才是RNN中的hidden_size
         self.src_hidden_dim = src_hidden_dim // 2 if self.bidirectional else src_hidden_dim
 
         self.src_embedding = nn.Embedding(
@@ -452,7 +453,7 @@ class Seq2Seq(nn.Module):
             hidden_size=trg_hidden_dim,
             num_layers=nlayers_trg,
             dropout=self.dropout,
-            batch_first=True
+            batch_first=True  # If True, then the input and output tensors are provided as (batch, seq, feature)
         )
 
         self.encoder2decoder = nn.Linear(
@@ -472,8 +473,10 @@ class Seq2Seq(nn.Module):
         self.decoder2vocab.bias.data.fill_(0)
 
     def get_state(self, input):
-        """Get cell states and hidden states."""
-        # （h0, c0）(num_layers \* num_directions, batch, hidden_size)
+        """Get cell states and hidden states.
+        :param input: If batch_first, then [seq_len, batch]
+        :return: （h0, c0）(num_layers \* num_directions, batch, hidden_size)
+        """
         batch_size = input.size(0) if self.encoder.batch_first else input.size(1)
         h0_encoder = Variable(torch.zeros(
             self.encoder.num_layers * self.num_directions,
@@ -489,9 +492,18 @@ class Seq2Seq(nn.Module):
         return h0_encoder.cuda(), c0_encoder.cuda()
 
     def forward(self, input_src, input_trg, ctx_mask=None, trg_mask=None):
-        """Propogate input through the network."""
-        src_emb = self.src_embedding(input_src)  # 得到源句子的向量
-        trg_emb = self.trg_embedding(input_trg)  # 得到目标句子的向量
+        """
+        Propagate input through the network.
+        :param input_src: [seq_len_src, batch]
+        :param input_trg: [seq_len_trg, batch]
+        :param ctx_mask:
+        :param trg_mask:
+        :return:
+        """
+        # 得到源句子的向量[seq_len_src, batch, src_emb_dim]
+        src_emb = self.src_embedding(input_src)
+        # 得到目标句子的向量[seq_len_trg, batch, trg_emb_dim]
+        trg_emb = self.trg_embedding(input_trg)
 
         # 得到初始LSTM的输入变量h0、c0
         self.h0_encoder, self.c0_encoder = self.get_state(input_src)
@@ -499,18 +511,22 @@ class Seq2Seq(nn.Module):
         src_h, (src_h_t, src_c_t) = self.encoder(
             src_emb, (self.h0_encoder, self.c0_encoder)
         )
-        # src_h_t: num_layers * num_directions, batch, hidden_size
+        # src_h: [seq_len_src, batch, self.src_hidden_dim * num_directions]
+        # src_h_t: [num_layers * num_directions, batch, self.src_hidden_dim]
+        # src_c_t: [num_layers * num_directions, batch, self.src_hidden_dim]
 
         if self.bidirectional:
-            h_t = torch.cat((src_h_t[-1], src_h_t[-2]), 1)  # 在列上拼接
-            c_t = torch.cat((src_c_t[-1], src_c_t[-2]), 1)
+            h_t = torch.cat((src_h_t[-1], src_h_t[-2]), 1)  # 在列上拼接[batch, self.src_hidden_dim*2]
+            c_t = torch.cat((src_c_t[-1], src_c_t[-2]), 1)  # 在列上拼接[batch, self.src_hidden_dim*2]
         else:
-            h_t = src_h_t[-1]
-            c_t = src_c_t[-1]
+            h_t = src_h_t[-1]   # [batch, self.src_hidden_dim]
+            c_t = src_c_t[-1]   # [batch, self.src_hidden_dim]
 
-        # h_t : num_layers, batch, src_hidden_dim * num_directions -> batch, trg_hidden_dim
+        # h_t  -> [batch, trg_hidden_dim]
         decoder_init_state = nn.Tanh()(self.encoder2decoder(h_t))
 
+        # input: [seq_len_trg, batch, trg_emb_dim]
+        # (h_0, c_0):
         trg_h, (_, _) = self.decoder(
             trg_emb,
             (
@@ -522,27 +538,31 @@ class Seq2Seq(nn.Module):
                 c_t.view(
                     self.decoder.num_layers,
                     c_t.size(0),
-                    c_t.size(1)
+                    c_t.size(1)     # 这里的"hidden_size"?怎么理解?
                 )
             )
         )
+        # trg_h : [trg_seq_len, batch, trg_hidden_dim*nlayers_trg]
 
         trg_h_reshape = trg_h.contiguous().view(
             trg_h.size(0) * trg_h.size(1),
             trg_h.size(2)
         )
-
+        # [trg_seq_len*batch, trg_hidden_dim*nlayers_trg] -> [trg_seq_len*batch, trg_vocab_size]
         decoder_logit = self.decoder2vocab(trg_h_reshape)
         decoder_logit = decoder_logit.view(
             trg_h.size(0),
             trg_h.size(1),
             decoder_logit.size(1)
-        )
-
+        )  # [trg_seq_len, batch, trg_vocab_size]
         return decoder_logit
 
     def decode(self, logits):
-        """Return probability distribution over words."""
+        """
+        Return probability distribution over words.
+        :param logits: [trg_seq_len, batch, trg_vocab_size]
+        :return: 'word_probs'  [trg_seq_len, batch, trg_vocab_size]
+        """
         logits_reshape = logits.view(-1, self.trg_vocab_size)
         word_probs = F.softmax(logits_reshape)
         word_probs = word_probs.view(
@@ -662,10 +682,8 @@ class Seq2SeqAutoencoder(nn.Module):
 
         if self.bidirectional and self.nlayers > 1:
             src_h, (src_h_t, src_c_t) = self.encoder(src_emb)
-
         else:
             self.h0_encoder, self.c0_encoder = self.get_state(input)
-
             src_h, (src_h_t, src_c_t) = self.encoder(
                 src_emb, (self.h0_encoder, self.c0_encoder)
             )

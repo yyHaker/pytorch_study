@@ -19,12 +19,12 @@ def bleu_stats(hypothesis, reference):
     stats = []
     stats.append(len(hypothesis))
     stats.append(len(reference))
-    for n in xrange(1, 5):
+    for n in range(1, 5):
         s_ngrams = Counter(
-            [tuple(hypothesis[i:i + n]) for i in xrange(len(hypothesis) + 1 - n)]
+            [tuple(hypothesis[i:i + n]) for i in range(len(hypothesis) + 1 - n)]
         )
         r_ngrams = Counter(
-            [tuple(reference[i:i + n]) for i in xrange(len(reference) + 1 - n)]
+            [tuple(reference[i:i + n]) for i in range(len(reference) + 1 - n)]
         )
         stats.append(max([sum((s_ngrams & r_ngrams).values()), 0]))
         stats.append(max([len(hypothesis) + 1 - n, 0]))
@@ -104,7 +104,7 @@ def model_perplexity(
     """Compute model perplexity."""
     # Get source minibatch
     losses = []
-    for j in xrange(0, len(src_test['data']) // 100, config['data']['batch_size']):
+    for j in range(0, len(src_test['data']) // 100, config['data']['batch_size']):
         input_lines_src, output_lines_src, lens_src, mask_src = get_minibatch(
             src_test['data'], src['word2id'], j, config['data']['batch_size'],
             config['data']['max_src_length'], add_start=True, add_end=True
@@ -145,7 +145,7 @@ def evaluate_model(
     """Evaluate model."""
     preds = []
     ground_truths = []
-    for j in xrange(0, len(src_test['data']), config['data']['batch_size']):
+    for j in range(0, len(src_test['data']), config['data']['batch_size']):
 
         # Get source minibatch
         input_lines_src, output_lines_src, lens_src, mask_src = get_minibatch(
@@ -166,7 +166,7 @@ def evaluate_model(
         input_lines_trg = Variable(torch.LongTensor(
             [
                 [trg['word2id']['<s>']]
-                for i in xrange(input_lines_src.size(0))
+                for i in range(input_lines_src.size(0))
             ]
         )).cuda()
 
@@ -203,16 +203,16 @@ def evaluate_model(
             preds.append(['<s>'] + sentence_pred[:index + 1])
 
             if verbose:
-                print ' '.join(['<s>'] + sentence_pred[:index + 1])
+                print(' '.join(['<s>'] + sentence_pred[:index + 1]))
 
             if '</s>' in sentence_real:
                 index = sentence_real.index('</s>')
             else:
                 index = len(sentence_real)
             if verbose:
-                print ' '.join(['<s>'] + sentence_real[:index + 1])
+                print(' '.join(['<s>'] + sentence_real[:index + 1]))
             if verbose:
-                print '--------------------------------------'
+                print('--------------------------------------')
             ground_truths.append(['<s>'] + sentence_real[:index + 1])
 
     return get_bleu(preds, ground_truths)
@@ -228,7 +228,7 @@ def evaluate_autoencode_model(
     ground_truths = []
     for j in xrange(0, len(src_test['data']), config['data']['batch_size']):
 
-        print 'Decoding batch : %d out of %d ' % (j, len(src_test['data']))
+        print('Decoding batch : %d out of %d ' % (j, len(src_test['data'])))
         input_lines_src, lens_src, mask_src = get_autoencode_minibatch(
             src_test['data'], src['word2id'], j, config['data']['batch_size'],
             config['data']['max_src_length'], add_start=True, add_end=True
@@ -237,11 +237,11 @@ def evaluate_autoencode_model(
         input_lines_trg = Variable(torch.LongTensor(
             [
                 [src['word2id']['<s>']]
-                for i in xrange(input_lines_src.size(0))
+                for i in range(input_lines_src.size(0))
             ]
         )).cuda()
 
-        for i in xrange(config['data']['max_src_length']):
+        for i in range(config['data']['max_src_length']):
 
             decoder_logit = model(input_lines_src, input_lines_trg)
             word_probs = model.decode(decoder_logit)
@@ -279,16 +279,16 @@ def evaluate_autoencode_model(
             preds.append(sentence_pred[:index + 1])
 
             if verbose:
-                print ' '.join(sentence_pred[:index + 1])
+                print(' '.join(sentence_pred[:index + 1]))
 
             if '</s>' in sentence_real:
                 index = sentence_real.index('</s>')
             else:
                 index = len(sentence_real)
             if verbose:
-                print ' '.join(sentence_real[:index + 1])
+                print(' '.join(sentence_real[:index + 1]))
             if verbose:
-                print '--------------------------------------'
+                print('--------------------------------------')
             ground_truths.append(sentence_real[:index + 1])
 
     return get_bleu(preds, ground_truths)
