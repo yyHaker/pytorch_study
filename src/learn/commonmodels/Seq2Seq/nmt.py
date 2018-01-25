@@ -19,15 +19,24 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+# 设置全局cudnn不可用
+torch.backends.cudnn.enabled = False
+
 parser = argparse.ArgumentParser()
 # 参数配置文件路径，必须输入该参数
-parser.add_argument("--config", help="path to json config", required=True)
+parser.add_argument("--config", help="path to json config",
+                    default="config_en_vanilla_seq2seq_wmt14.json")
 args = parser.parse_args()
 config_file_path = args.config
 config = read_config(config_file_path)
 experiment_name = hyperparam_string(config)
 save_dir = config['data']['save_dir']
 load_dir = config['data']['load_dir']
+
+# 创建log file
+log_file_name = 'log/%s' % experiment_name
+with open(log_file_name, 'w') as f:
+    pass
 
 logging.basicConfig(
     level=logging.INFO,

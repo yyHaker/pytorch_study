@@ -108,7 +108,7 @@ def read_nmt_data(src, config, trg=None):
     """Read data from files."""
     print('Reading source data ...')
     src_lines = []
-    with open(src, 'r') as f:
+    with open(src, 'r', encoding='utf-8') as f:
         for ind, line in enumerate(f):
             src_lines.append(line.strip().split())
 
@@ -123,7 +123,7 @@ def read_nmt_data(src, config, trg=None):
     if trg is not None:
         print('Reading target data ...')
         trg_lines = []
-        with open(trg, 'r') as f:
+        with open(trg, 'r', encoding='utf-8') as f:
             for line in f:
                 trg_lines.append(line.strip().split())
 

@@ -6,8 +6,9 @@ import torchvision
 import torch.utils.data as Data
 import matplotlib.pyplot as plt
 import time
+
 # 设置全局cudnn不可用
-# torch.backends.cudnn.enabled = False
+torch.backends.cudnn.enabled = False
 
 torch.manual_seed(1)  # reproducible
 
@@ -29,9 +30,9 @@ train_data = torchvision.datasets.MNIST(
 # plot one example
 print(train_data.train_data.size())   # (60000, 28, 28)
 print(train_data.train_labels.size())  # (60000)
-plt.imshow(train_data.train_data[0].numpy(), cmap='gray')
-plt.title('%i' % train_data.train_labels[0])
-plt.show()
+# plt.imshow(train_data.train_data[0].numpy(), cmap='gray')
+# plt.title('%i' % train_data.train_labels[0])
+# plt.show()
 
 train_loader = Data.DataLoader(dataset=train_data, batch_size=BATCH_SIZE, shuffle=True)
 

@@ -10,10 +10,10 @@
     "checkpoint_freq": 1000
   },
   "data": {
-    "src": "/data/lisatmp4/subramas/datasets/nmt/en-fr/data/europarl-v7.fr-en.tok.true.clean.fr",
-    "trg": "/data/lisatmp4/subramas/datasets/nmt/en-fr/data/europarl-v7.fr-en.tok.true.clean.en",
-    "test_src": "/data/lisatmp4/subramas/datasets/nmt/en-fr/data/newstest2011.fr.true.tok",
-    "test_trg": "/data/lisatmp4/subramas/datasets/nmt/en-fr/data/newstest2011.en.true.tok",
+    "src": "data/lisatmp4/subramas/datasets/nmt/en-fr/data/europarl-v7.fr-en.fr",
+    "trg": "data/lisatmp4/subramas/datasets/nmt/en-fr/data/europarl-v7.fr-en.en",
+    "test_src": "data/lisatmp4/subramas/datasets/nmt/en-fr/data/newstest2011.fr",
+    "test_trg": "data/lisatmp4/subramas/datasets/nmt/en-fr/data/newstest2011.en",
     "batch_size": 80,
     "n_words_trg": 30000,
     "valid_batch_size": 80,
