@@ -212,6 +212,8 @@ for i in range(1000):
             ).data.cpu().numpy().argmax(axis=-1)
 
             output_lines_trg = output_lines_trg.data.cpu().numpy()
+
+            # sample several sentence
             for sentence_pred, sentence_real in zip(
                 word_probs[:5], output_lines_trg[:5]
             ):
@@ -229,7 +231,6 @@ for i in range(1000):
                 logging.info('===============================================')
 
         if j % config['management']['checkpoint_freq'] == 0:
-
             logging.info('Evaluating model ...')
             bleu = evaluate_model(
                 model, src, src_test, trg,
@@ -264,4 +265,3 @@ for i in range(1000):
             experiment_name + '__epoch_%d' % (i) + '.model'), 'wb'
         )
     )
-# TODO : find the data and training use the model
