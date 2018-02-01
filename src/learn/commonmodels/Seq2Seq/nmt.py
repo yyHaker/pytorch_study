@@ -209,7 +209,9 @@ for i in range(1000):
                         j % config['management']['print_samples'] == 0):
             word_probs = model.decode(
                 decoder_logit
-            ).data.cpu().numpy().argmax(axis=-1)
+
+
+
 
             output_lines_trg = output_lines_trg.data.cpu().numpy()
 
