@@ -102,8 +102,11 @@ def main():
     gold_score_total, gold_words_total = 0, 0
 
     for batch in data_iter:
-        batch_data = translator.translate_batch(batch, data)
+        print(type(batch))  # torchtext.data.batch.Batch
+        # print("type(data)", type(data))   # onmt.io.TextDataset.TextDataset
+        batch_data = translator.translate_batch(batch, data)   # batch ?  data ?
         translations = builder.from_batch(batch_data)
+        # print(type(translations))  # list
 
         for trans in translations:
             pred_score_total += trans.pred_scores[0]

@@ -17,7 +17,7 @@ class Translator(object):
        n_best (int): number of translations produced   #  一个句子会产生几个翻译结果？
        max_length (int): maximum length output to produce
        global_scores (:obj:`GlobalScorer`):
-         object to rescore final translations
+            object to rescore final translations
        copy_attn (bool): use copy attention during translation  # ？
        cuda (bool): use cuda
        beam_trace (bool): trace beam search for debugging
@@ -62,13 +62,13 @@ class Translator(object):
            Shouldn't need the original dataset.
         """
 
-        # (0) Prep each of the components of the search.
+        # (0) Prepare each of the components of the search.
         # And helper method for reducing verbosity.
         beam_size = self.beam_size
         batch_size = batch.batch_size
-        data_type = data.data_type
+        data_type = data.data_type    # e.x. 'text'
         vocab = self.fields["tgt"].vocab  # vocabulary
-        # beam 有什么用？
+        # beam 有什么用？每个句子对应一个beam对象？
         beam = [onmt.translate.Beam(beam_size, n_best=self.n_best,
                                     cuda=self.cuda,
                                     global_scorer=self.global_scorer,
@@ -97,8 +97,9 @@ class Translator(object):
         src = onmt.io.make_features(batch, 'src', data_type)  # len x batch tensors
         src_lengths = None
         if data_type == 'text':
-            _, src_lengths = batch.src
+            _, src_lengths = batch.src   # src属性？？？len ?
 
+        # 将输入encode(查看一下encoder和decoder的实现，理解输入和输出)
         enc_states, context = self.model.encoder(src, src_lengths)
         dec_states = self.model.decoder.init_decoder_state(
                                         src, context, enc_states)
@@ -152,10 +153,6 @@ class Translator(object):
                                                    src_map)
                 # beam x (tgt_vocab + extra_vocab)
                 out = data.collapse_copy_scores(
-
-
-
-
                     unbottle(out.data),
                     batch, self.fields["tgt"].vocab, data.src_vocabs)
                 # beam x tgt_vocab
