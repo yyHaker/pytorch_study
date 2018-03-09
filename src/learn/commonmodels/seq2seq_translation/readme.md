@@ -2,23 +2,33 @@
 
 
 ##model
-the seq2seq model
+the seq2seq model's basic idea
+
 ![seq2seq](./files/Seq2Seq.png)
 
+
 the encoder
+
 ![encoder](./files/encoder.png)
 
+
 the decoder
+
 ![decoder](./files/decoder.png)
 
+
 attention decoder
+
 ![attention decoder](./files/attention_decoder.png)
+
 
 ## train
 训练过程中的loss
+
 ![train loss](./files/seq_seq_train.png)
 
 attention的可视化
+
 ![attention show](./files/attention_show.png)
 
 
