@@ -5,3 +5,9 @@ init_alphas = torch.FloatTensor(1, 5).fill_(-10000.)
 sentence_in = Variable(torch.LongTensor([1, 2, 3, 4]).view(1, -1))
 print(init_alphas)
 print(sentence_in)
+
+print("-" * 60)
+# 关于index
+for di in range(10):
+    print("di: ", di)
+print("current di:", di)
