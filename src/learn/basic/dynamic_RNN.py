@@ -71,7 +71,6 @@ for i in range(100):
     dynamic_steps = np.random.randint(1, 4)  # 随机time step长度
     start, end = step * np.pi, (step + dynamic_steps) * np.pi  # different steps length
     step += dynamic_steps
-
     # sin predict cos
     steps = np.linspace(start, end, 10 * dynamic_steps, dtype=np.float32)
     print(len(steps))

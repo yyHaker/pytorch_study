@@ -18,7 +18,8 @@ from datatools import SOS_token
 from datatools import EOS_token
 from datatools import variablesFromPair, prepareData
 
-from model import EncoderRNN, AttnDecoderRNN
+from model import EncoderRNN, AttnDecoderRNN, DecoderRNN
+
 
 teacher_forcing_ratio = 0.5
 
@@ -55,7 +56,7 @@ def train(input_variable, target_variable, encoder,
     # encode the input
     for ei in range(input_length):
         encoder_output, encoder_hidden = encoder(input_variable[ei], encoder_hidden)
-        # 填充encoder的输出Variable
+        # 填充encoder的输出Variable, 即encoder的每一时刻的输出
         encoder_outputs[ei] = encoder_output[0][0]
 
     # tensor [1 x 1]
@@ -70,7 +71,7 @@ def train(input_variable, target_variable, encoder,
 
     # decoder the input
     if use_teacher_forcing:
-        # Teacher forcing: Feed the target as the next input
+        # Teacher forcing: Feed the true target as the next input
         for di in range(target_length):
             decoder_output, decoder_hidden, decoder_attetion = decoder(
                 decoder_input, decoder_hidden, encoder_outputs)
@@ -82,6 +83,7 @@ def train(input_variable, target_variable, encoder,
         for di in range(target_length):
             decoder_output, decoder_hidden, decoder_attention = decoder(
                 decoder_input, decoder_hidden, encoder_outputs)
+            # 每次选取概率最大的那个
             topv, topi = decoder_output.data.topk(1)
             # get the index
             ni = topi[0][0]
@@ -133,8 +135,8 @@ def showPlot(points):
     plt.show()
 
 
-def trainIters(pairs, input_lang, output_lang, encoder, decoder, n_iters,
-               print_every=1000, plot_every=100,learning_rate=0.01):
+def trainIters(pairs, input_lang, output_lang, encoder, decoder, n_iters=7500,
+               print_every=1000, plot_every=100, learning_rate=0.01):
     """
     :param pairs:
     :param input_lang:
@@ -158,6 +160,8 @@ def trainIters(pairs, input_lang, output_lang, encoder, decoder, n_iters,
     # prepare data pairs
     training_pairs = [variablesFromPair(random.choice(pairs), input_lang,
                                         output_lang) for i in range(n_iters)]
+
+    # use The negative log likelihood loss.
     criterion = nn.NLLLoss()
 
     for iter in range(1, n_iters + 1):
@@ -189,21 +193,25 @@ if __name__ == "__main__":
     # prepare data
     input_lang, output_lang, pairs = prepareData('eng', 'fra', True)
 
+    # RNN hidden size and wordVector dim
     hidden_size = 256
     encoder1 = EncoderRNN(input_lang.n_words, hidden_size)
-    attn_decoder1 = AttnDecoderRNN(hidden_size, output_lang.n_words,
-                                   dropout_p=0.1)
+    # decoder1 = DecoderRNN(hidden_size, output_lang.n_words)
+
+    attn_decoder1 = AttnDecoderRNN(hidden_size, output_lang.n_words, dropout_p=0.1)
+
     if USE_CUDA:
         encoder1 = encoder1.cuda()
-        attn_decoder1 = attn_decoder1.cuda()
+        decoder1 = attn_decoder1.cuda()
+        # attn_decoder1 = attn_decoder1.cuda()
 
     # train
-    trainIters(pairs, input_lang, output_lang, encoder1, attn_decoder1,
-               75000, print_every=5000)
+    trainIters(pairs, input_lang, output_lang, encoder1, attn_decoder1, n_iters=7500,
+               print_every=1000, plot_every=100, learning_rate=0.01)
 
     # save model
-    torch.save(encoder1, "./models/encoder.pkl")
-    torch.save(attn_decoder1, "./models/decoder.pkl")
+    torch.save(encoder1, './models/encoder1')
+    torch.save(attn_decoder1, './models/decoder1')
 
 
 

@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import time
 
 # 设置全局cudnn不可用
-torch.backends.cudnn.enabled = False
+# torch.backends.cudnn.enabled = False
 
 torch.manual_seed(1)  # reproducible
 

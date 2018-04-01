@@ -27,6 +27,8 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
+if args.cuda:
+    print("use cuda")
 
 torch.manual_seed(args.seed)
 if args.cuda:
