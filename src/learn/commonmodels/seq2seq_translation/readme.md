@@ -31,6 +31,9 @@ attention的可视化
 
 ![attention show](./files/attention_show.png)
 
+##problems to be think about
+1.该例子中的attention是使用FeedForward Network计算得到, 是nmt对齐机制吗？
+2.得到attention value值之后, 怎么用来预测target word，直接和输入word拼接然后再输入到decoder？
 
 
 ##resource
