@@ -22,6 +22,7 @@ x, y = Variable(x), Variable(y)
 plt.scatter(x.data.numpy()[:, 0], x.data.numpy()[:, 1], c=y.data.numpy(), s=100, lw=0, cmap='RdYlGn')
 plt.show()
 
+
 class Net(torch.nn.Module):
     def __init__(self, n_features, n_hidden, n_output):
         super(Net, self).__init__()
@@ -33,11 +34,12 @@ class Net(torch.nn.Module):
         x = self.out(x)
         return x
 
+
 net = Net(n_features=2, n_hidden=10, n_output=2)  # 2 classes
 print(net)
 
 # training
-optimizer = torch.optim.SGD(net.parameters(), lr=0.02)
+optimizer = torch.optim.SGD(net.parameters(), lr=0.002)
 lossfunc = torch.nn.CrossEntropyLoss()
 
 plt.ion()

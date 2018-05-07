@@ -20,9 +20,9 @@ INPUT_SIZE = 28  # rnn每步输入值/图片每行像素
 LR = 0.01  # learning rate
 DOWNLOAD_MNIST = True
 
-# mnist
+# image_classify
 train_data = torchvision.datasets.MNIST(
-    root='./mnist/',        # save or fetch path
+    root='./image_classify/',        # save or fetch path
     train=True,      # this is training data
     transform=torchvision.transforms.ToTensor(),
     download=DOWNLOAD_MNIST
@@ -37,7 +37,7 @@ print(train_data.train_labels.size())  # (60000)
 train_loader = Data.DataLoader(dataset=train_data, batch_size=BATCH_SIZE, shuffle=True)
 
 # convert test data into Variable
-test_data = torchvision.datasets.MNIST(root='./mnist/', train=False, transform=torchvision.transforms.ToTensor)
+test_data = torchvision.datasets.MNIST(root='./image_classify/', train=False, transform=torchvision.transforms.ToTensor)
 # shape (2000, 28, 28) value in range(0, 1)
 test_x = Variable(test_data.test_data, volatile=True).type(torch.FloatTensor)[:2000].cuda() / 255.
 test_y = test_data.test_labels[:2000].cuda()   # convert to numpy array

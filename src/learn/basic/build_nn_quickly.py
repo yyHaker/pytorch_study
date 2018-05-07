@@ -2,6 +2,7 @@
 import torch
 import torch.nn.functional as F
 
+
 # build network - method 1 : 使用class继承torch中的神经网络结构
 class Net(torch.nn.Module):
     def __init__(self, n_features, n_hidden, n_output):

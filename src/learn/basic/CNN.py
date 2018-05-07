@@ -15,7 +15,7 @@ DOWNLOAD_MNIST = True
 
 # MNIST
 train_data = torchvision.datasets.MNIST(
-    root='./mnist/',  # save path or fetch path
+    root='./image_classify/',  # save path or fetch path
     train=True,   # this is train data
     transform=torchvision.transforms.ToTensor(),
     download=DOWNLOAD_MNIST
@@ -23,7 +23,7 @@ train_data = torchvision.datasets.MNIST(
 # batch training 50examples, 1 channel, 28*28(50, 1,28, 28)
 train_loader = Data.DataLoader(dataset=train_data, batch_size=BATCH_SIZE, shuffle=True)
 
-test_data = torchvision.datasets.MNIST(root='./mnist/', train=False)
+test_data = torchvision.datasets.MNIST(root='./image_classify/', train=False)
 # shape from (2000, 28, 28) to (2000, 1, 28, 28), value in range(0, 1)
 test_x = Variable(torch.unsqueeze(test_data.test_data, dim=1), volatile=True).type(torch.FloatTensor)[:2000].cuda()/255.
 test_y = test_data.test_labels[: 2000].cuda()
