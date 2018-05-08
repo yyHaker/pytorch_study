@@ -82,7 +82,7 @@ for epoch in range(100):
         outputs = net(images)
         _, predicted = torch.max(outputs.data, 1)
         if USE_CUDA:
-            predicted = predicted.cpu().data.numpy()
+            predicted = predicted.cpu().numpy()
         else:
             predicted = predicted.numpy()
         total += labels.size(0)
