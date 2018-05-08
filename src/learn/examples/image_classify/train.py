@@ -13,6 +13,9 @@ import numpy as np
 
 from models import LeNet5
 
+USE_CUDA = torch.cuda.is_available()
+device = torch.device("cuda: 0" if USE_CUDA else "cpu")
+
 # load data
 transform = transforms.Compose([transforms.ToTensor(), transforms.
                                Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
@@ -45,6 +48,8 @@ print(' '.join('%5s' % classes[labels[j]] for j in range(4)))
 
 # define models
 net = LeNet5()
+if USE_CUDA:
+    net.to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.9)
 
@@ -53,6 +58,8 @@ for epoch in range(100):
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
         inputs, labels = data
+        if USE_CUDA:
+            inputs, labels = inputs.to(device), labels.to(device)
         optimizer.zero_grad()
         outputs = net(inputs)
         loss = criterion(outputs, labels)
