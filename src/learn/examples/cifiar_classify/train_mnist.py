@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 import torch.utils.data as Data
@@ -11,7 +10,7 @@ import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 import numpy as np
 
-from models import LeNet5
+from src.learn.examples.cifiar_classify.models import LeNet5
 
 USE_CUDA = torch.cuda.is_available()
 

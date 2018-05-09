@@ -1,27 +1,41 @@
 # -*- coding: utf-8 -*-
+"""
+some models to train the image_scene_data
+"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
-class LeNet5(nn.Module):
-    """the LeNet5 models"""
+class AlexNet(nn.Module):
+    """the fake AlexNet models"""
     def __init__(self):
-        super(LeNet5, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=6, kernel_size=5)
-        self.conv2 = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5)
+        super(AlexNet, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=96, kernel_size=11, stride=4)
+        self.conv2 = nn.Conv2d(in_channels=96, out_channels=256, kernel_size=3, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(in_channels=256, out_channels=384, kernel_size=3, stride=1, padding=1)
+        self.conv4 = nn.Conv2d(in_channels=384, out_channels=256, kernel_size=3, stride=1, padding=1)
 
-        self.fc1 = nn.Linear(in_features=16*5*5, out_features=120)
-        self.fc2 = nn.Linear(in_features=120, out_features=84)
-        self.fc3 = nn.Linear(in_features=84, out_features=10)
+        self.fc1 = nn.Linear(in_features=6*6*256, out_features=4096)
+        self.fc2 = nn.Linear(in_features=4096, out_features=4096)
+        self.fc3 = nn.Linear(in_features=4096, out_features=1000)
+        self.fc4 = nn.Linear(in_features=1000, out_features=20)
 
     def forward(self, x):
-        x = F.max_pool2d(F.relu(self.conv1(x)), kernel_size=(2, 2))
-        x = F.max_pool2d(F.relu(self.conv2(x)), kernel_size=2)
+        """
+        :param x: input tensor, [None, 3x227x227]
+        :return:
+        """
+        x = F.max_pool2d(F.relu(self.conv1(x)), kernel_size=(2, 2))  # 96x27x27
+        x = F.max_pool2d(F.relu(self.conv2(x)), kernel_size=(2, 2))  # 256x13x13
+        x = F.relu(self.conv3(x))  # 383x13x13
+        x = F.relu(self.conv4(x))  # 256x13x13
+        x = F.max_pool2d(x, kernel_size=(2, 2))  # 256x6x6
         x = x.view(-1, self.num_flat_features(x))
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = F.relu(self.fc3(x))
+        x = self.fc4(x)
         return x
 
     def num_flat_features(self, x):
@@ -30,14 +44,4 @@ class LeNet5(nn.Module):
         for s in size:
             num_features *= s
         return num_features
-
-
-# network framework
-# net = LeNet5()
-# print(net)
-
-# model params
-# params = list(net.parameters())
-# for s in range(len(params)):
-    # print(params[0].size())
 

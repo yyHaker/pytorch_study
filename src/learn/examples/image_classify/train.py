@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-import torchvision
 import torchvision.transforms as transforms
 
-import matplotlib.pyplot as plt
-import numpy as np
-
-from models import LeNet5
+from models import AlexNet
 from dataUtils import ImageSceneData
 
 USE_CUDA = torch.cuda.is_available()
@@ -19,7 +14,7 @@ USE_CUDA = torch.cuda.is_available()
 # load data
 # transform
 train_data_transform = transforms.Compose([
-    transforms.RandomSizedCrop(224),
+    transforms.RandomSizedCrop(227),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
 ])
@@ -49,7 +44,7 @@ valid_image_data_loader = DataLoader(valid_image_data, batch_size=4, shuffle=Tru
                                      num_workers=4)
 
 # define models
-net = LeNet5()
+net = AlexNet()
 if USE_CUDA:
     net = net.cuda()
 criterion = nn.CrossEntropyLoss()
