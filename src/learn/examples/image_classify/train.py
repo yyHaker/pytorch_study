@@ -48,7 +48,7 @@ net = AlexNet()
 if USE_CUDA:
     net = net.cuda()
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.9)
+optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
 
 # train
 for epoch in range(100):
@@ -66,8 +66,8 @@ for epoch in range(100):
 
         # print statistics
         running_loss += loss.data[0]
-        if i % 2000 == 1999:  # print every 2000 mini-batches
-            print('[%d, %5d] loss: %.3f' % (epoch+1, i+1, running_loss / 2000))
+        if i % 1000 == 999:  # print every 200 mini-batches
+            print('[%d, %5d] loss: %.3f' % (epoch+1, i+1, running_loss / 1000))
             running_loss = 0.0
     # every epoch test the model on the valid data
     correct = 0
@@ -86,7 +86,7 @@ for epoch in range(100):
         total += labels.size(0)
         labels = labels.numpy()
         correct += (predicted == labels).sum()
-    print("epoch %d , Accuracy of the net on the 1000 test images: %d %% "
+    print("epoch %d , Accuracy of the net on the 1000 valid images: %d %% "
           % (epoch, 100 * correct / total))
 
 print("training is done!")
