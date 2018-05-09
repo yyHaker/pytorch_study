@@ -21,7 +21,7 @@ from onmt.Utils import use_gpu
 import opts
 
 parser = argparse.ArgumentParser(
-    description='train.py',
+    description='train_mnist.py',
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # opts.py

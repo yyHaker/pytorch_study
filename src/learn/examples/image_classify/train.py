@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
-import torch.utils.data as Data
+from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
 
@@ -12,38 +12,41 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from models import LeNet5
+from dataUtils import ImageSceneData
 
 USE_CUDA = torch.cuda.is_available()
 
 # load data
-transform = transforms.Compose([transforms.ToTensor(), transforms.
-                               Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
-trainset = torchvision.datasets.CIFAR10(root='./cifiar', train=True,
-                                        transform=transform, download=True)
-trainloader = Data.DataLoader(trainset, batch_size=4,
-                              shuffle=True, num_workers=2)
+# transform
+train_data_transform = transforms.Compose([
+    transforms.RandomSizedCrop(224),
+    transforms.RandomHorizontalFlip(),
+    transforms.ToTensor(),
+])
+# transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+# use Dataset
+train_image_data = ImageSceneData(categories_csv='image_scene_data/categories.csv',
+                                  list_csv='image_scene_data/train_list.csv',
+                                  data_root='image_scene_data/data',
+                                  transform=train_data_transform)
+# use DataLoader
+train_image_data_loader = DataLoader(train_image_data, batch_size=4, shuffle=True,
+                                     num_workers=4)
 
-testset = torchvision.datasets.CIFAR10(root='./cifiar', train=False,
-                                       transform=transform, download=True)
-testLoader = Data.DataLoader(testset, batch_size=4,
-                             shuffle=False, num_workers=2)
-classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse',
-           'ship', 'truck')
-
-
-# show some image
-def imgshow(img):
-    img = img / 2 + 0.5  # unnormalize
-    nimg = img.numpy()
-    plt.imshow(np.transpose(nimg, (1, 2, 0)))
-    plt.show()
-
-
-dataiter = iter(trainloader)
-images, labels = dataiter.next()
-# print labels
-print(' '.join('%5s' % classes[labels[j]] for j in range(4)))
-# mgshow(torchvision.utils.make_grid(images))
+# transform
+valid_data_transform = transforms.Compose([
+    transforms.RandomSizedCrop(224),
+    transforms.ToTensor(),
+])
+# transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+# use Dataset
+valid_image_data = ImageSceneData(categories_csv='image_scene_data/categories.csv',
+                                  list_csv='image_scene_data/valid_list.csv',
+                                  data_root='image_scene_data/data',
+                                  transform=valid_data_transform)
+# use DataLoader
+valid_image_data_loader = DataLoader(valid_image_data, batch_size=4, shuffle=True,
+                                     num_workers=4)
 
 # define models
 net = LeNet5()
@@ -55,8 +58,8 @@ optimizer = optim.SGD(net.parameters(), lr=0.0001, momentum=0.9)
 # train
 for epoch in range(100):
     running_loss = 0.0
-    for i, data in enumerate(trainloader, 0):
-        inputs, labels = data
+    for i, data in enumerate(train_image_data_loader, 0):
+        inputs, labels = data['image'], data['label']
         inputs, labels = Variable(inputs), Variable(labels)
         if USE_CUDA:
             inputs, labels = inputs.cuda(), labels.cuda()
@@ -71,11 +74,11 @@ for epoch in range(100):
         if i % 2000 == 1999:  # print every 2000 mini-batches
             print('[%d, %5d] loss: %.3f' % (epoch+1, i+1, running_loss / 2000))
             running_loss = 0.0
-    # every epoch test the model
+    # every epoch test the model on the valid data
     correct = 0
     total = 0
-    for data in testLoader:
-        images, labels = data
+    for data in valid_image_data_loader:
+        images, labels = data['image'], data['label']
         images = Variable(images)
         if USE_CUDA:
             images, labels = images.cuda(), labels.cuda()
@@ -86,6 +89,7 @@ for epoch in range(100):
         else:
             predicted = predicted.numpy()
         total += labels.size(0)
+        labels = labels.numpy()
         correct += (predicted == labels).sum()
     print("epoch %d , Accuracy of the net on the 1000 test images: %d %% "
           % (epoch, 100 * correct / total))

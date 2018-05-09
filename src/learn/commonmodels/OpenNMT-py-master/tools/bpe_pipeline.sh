@@ -112,7 +112,7 @@ GPU_OPTS=""
 if [[ ! -z $GPUARG ]]; then
     GPU_OPTS="-gpuid $GPUARG"
 fi
-CMD="python $ONMT/train.py -data $OUT/data/processed -save_model $OUT/models/$NAME $GPU_OPTS"
+CMD="python $ONMT/train_mnist.py -data $OUT/data/processed -save_model $OUT/models/$NAME $GPU_OPTS"
 echo "Training command :: $CMD"
 eval "$CMD"
 

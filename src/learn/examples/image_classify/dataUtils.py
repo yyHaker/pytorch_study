@@ -13,7 +13,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import os
 
-from .myutils import split_train_valid, show_image_label, \
+from myutils import split_train_valid, show_image_label, \
     show_image_label_batch
 
 

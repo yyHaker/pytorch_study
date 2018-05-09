@@ -27,7 +27,7 @@ def write_embeddings(filename, dict, embeddings):
 
 
 def main():
-    dummy_parser = argparse.ArgumentParser(description='train.py')
+    dummy_parser = argparse.ArgumentParser(description='train_mnist.py')
     opts.model_opts(dummy_parser)
     dummy_opt = dummy_parser.parse_known_args([])[0]
     opt = parser.parse_args()

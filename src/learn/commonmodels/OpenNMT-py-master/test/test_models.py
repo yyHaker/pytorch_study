@@ -13,7 +13,7 @@ from onmt.ModelConstructor import make_embeddings, \
                             make_encoder, make_decoder
 from onmt.modules import ImageEncoder, AudioEncoder
 
-parser = argparse.ArgumentParser(description='train.py')
+parser = argparse.ArgumentParser(description='train_mnist.py')
 opts.model_opts(parser)
 opts.train_opts(parser)
 

@@ -9,8 +9,10 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 
+np.random.seed(1)
 
-def split_train_valid(data_root, list_csv, rate=0.9):
+
+def split_train_valid(list_csv, rate=0.9):
     """split data to train and valid.
     Actually change list.csv to train_list.csv and valid_list.csv.
     """
@@ -22,6 +24,12 @@ def split_train_valid(data_root, list_csv, rate=0.9):
     idx_train = idx_list[: train_size]
     idx_valid = idx_list[train_size+1:]
     print(idx_valid)
+    valid_list = list_frame.loc[idx_valid, :]
+    valid_list.to_csv('image_scene_data/valid_list.csv', index=False)
+    train_list = list_frame.loc[idx_train, :]
+    train_list.to_csv('image_scene_data/train_list.csv', index=False)
+    print("save list done")
+
 
 def show_image_label(image, label):
     """show image and label"""
@@ -44,4 +52,4 @@ def show_image_label_batch(sampled_batch, id2tag):
 
 
 if __name__ == "__main__":
-    split_train_valid(data_root='image_scene_data/data', list_csv='image_scene_data/list.csv')
+    split_train_valid(list_csv='image_scene_data/list.csv')

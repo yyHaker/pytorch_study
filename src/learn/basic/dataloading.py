@@ -91,4 +91,3 @@ for i in range(len(face_dataset)):
     if i == 3:
         plt.show()
         break
-

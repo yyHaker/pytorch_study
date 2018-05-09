@@ -2,11 +2,11 @@ from __future__ import division
 """
 This is the loadable seq2seq trainer library that is
 in charge of training details, loss compute, and statistics.
-See train.py for a use case of this library.
+See train_mnist.py for a use case of this library.
 
 Note!!! To make this a general library, we implement *only*
 mechanism things here(i.e. what to do), and leave the strategy
-things to users(i.e. how to do it). Also see train.py(one of the
+things to users(i.e. how to do it). Also see train_mnist.py(one of the
 users of this library) for the strategy things we do.
 """
 import time
