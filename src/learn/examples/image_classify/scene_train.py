@@ -115,7 +115,7 @@ def main():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
     train_dataset = ImageSceneData(categories_csv='image_scene_data/categories.csv',
-                                   list_csv='train_list.csv',
+                                   list_csv='image_scene_data/train_list.csv',
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
                                     transforms.RandomResizedCrop(224),
@@ -131,7 +131,7 @@ def main():
         num_workers=args.workers, pin_memory=True, sampler=train_sampler)
 
     valid_dataset = ImageSceneData(categories_csv='image_scene_data/categories.csv',
-                                   list_csv='valid_list.csv',
+                                   list_csv='image_scene_data/valid_list.csv',
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
                                        transforms.RandomResizedCrop(224),
