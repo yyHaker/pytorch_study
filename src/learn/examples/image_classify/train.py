@@ -76,7 +76,7 @@ for epoch in range(100):
         images, labels = data['image'], data['label']
         images = Variable(images)
         if USE_CUDA:
-            images, labels = images.cuda(), labels.cuda()
+            images = images.cuda()
         outputs = net(images)
         _, predicted = torch.max(outputs.data, 1)
         if USE_CUDA:
