@@ -5,6 +5,7 @@ import time
 
 import torch
 import torch.nn as nn
+from torch.autograd import Variable
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
@@ -181,11 +182,12 @@ def train(train_loader, model, criterion, optimizer, epoch):
     model.train()
 
     end = time.time()
-    for i, (input, target) in enumerate(train_loader):
+    for i, sample in enumerate(train_loader):
+        input = Variable(sample['image']).cuda()
+        target = Variable(sample['label']).cuda()
         # measure data loading time
         data_time.update(time.time() - end)
 
-        target = target.cuda(non_blocking=True)
 
         # compute output
         output = model(input)
@@ -228,8 +230,9 @@ def validate(val_loader, model, criterion):
 
     with torch.no_grad():
         end = time.time()
-        for i, (input, target) in enumerate(val_loader):
-            target = target.cuda(non_blocking=True)
+        for i, sample in enumerate(val_loader):
+            input = Variable(sample['image']).cuda()
+            target = Variable(sample['label']).cuda()
             # compute output
             output = model(input)
             loss = criterion(output, target)
