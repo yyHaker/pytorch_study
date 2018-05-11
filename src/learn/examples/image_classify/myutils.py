@@ -53,3 +53,4 @@ def show_image_label_batch(sampled_batch, id2tag):
 
 if __name__ == "__main__":
     split_train_valid(list_csv='image_scene_data/list.csv')
+    print(len(os.listdir("image_scene_data/data/")))

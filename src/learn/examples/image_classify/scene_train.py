@@ -15,7 +15,6 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-
 from dataUtils import ImageSceneData
 
 model_names = sorted(name for name in models.__dict__
@@ -33,32 +32,33 @@ parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--epochs', default=90, type=int, metavar='N',
                     help='number of total epochs to run')
-parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
+parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=16, type=int,
+parser.add_argument('-b', '--batch_size', default=16, type=int,
                     metavar='N', help='mini-batch size (default: 16)')
-parser.add_argument('--lr', '--learning-rate', default=0.01, type=float,
+parser.add_argument('--lr', '--learning_rate', default=0.01, type=float,
                     metavar='LR', help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
-parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
+parser.add_argument('--weight_decay', '--wd', default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)')
-parser.add_argument('--print-freq', '-p', default=100, type=int,
-                    metavar='N', help='print frequency (default: 100)')
+parser.add_argument('--print_freq', '-p', default=104, type=int,
+                    metavar='N', help='print frequency (default: 100 batch)')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                     help='use pre-trained model')
-parser.add_argument('--world-size', default=1, type=int,
+parser.add_argument('--world_size', default=1, type=int,
                     help='number of distributed processes')
-parser.add_argument('--dist-url', default='tcp://224.66.41.62:23456', type=str,
+parser.add_argument('--dist_url', default='tcp://224.66.41.62:23456', type=str,
                     help='url used to set up distributed training')
-parser.add_argument('--dist-backend', default='gloo', type=str,
+parser.add_argument('--dist_backend', default='gloo', type=str,
                     help='distributed backend')
 
 best_prec1 = 0  # best precision
+best_prec3 = 0
 
 
 def main():
@@ -155,10 +155,12 @@ def main():
         train(train_loader, model, criterion, optimizer, epoch)
 
         # evaluate on validation set
-        prec1 = validate(val_loader, model, criterion)
+        prec1, prec3 = validate(val_loader, model, criterion)
 
         # remember best prec@1 and save checkpoint
         is_best = prec1 > best_prec1
+        if is_best:
+            best_prec3 = prec3
         best_prec1 = max(prec1, best_prec1)
         save_checkpoint({
             'epoch': epoch + 1,
@@ -167,7 +169,8 @@ def main():
             'best_prec1': best_prec1,
             'optimizer': optimizer.state_dict(),
         }, is_best)
-        print("epoch {}, current the best model valid prec1: {}".format(epoch, best_prec1))
+        print("epoch {}, current the best model valid prec1: {}, prec3: {}".format(
+            epoch, best_prec1, best_prec3))
 
 
 # training on one epoch
@@ -187,7 +190,6 @@ def train(train_loader, model, criterion, optimizer, epoch):
         target = Variable(sample['label']).cuda()
         # measure data loading time
         data_time.update(time.time() - end)
-
 
         # compute output
         output = model(input)
@@ -248,7 +250,7 @@ def validate(val_loader, model, criterion):
             end = time.time()
 
             if i % args.print_freq == 0:
-                print('Test: [{0}/{1}]\t'
+                print('Valid: [{0}/{1}]\t'
                       'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                       'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                       'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
@@ -256,10 +258,10 @@ def validate(val_loader, model, criterion):
                        i, len(val_loader), batch_time=batch_time, loss=losses,
                        top1=top1, top3=top3))
 
-        print(' * Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f}'
+        print(' Valid:  * Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f}'
               .format(top1=top1, top3=top3))
 
-    return top1.avg
+    return top1.avg, top3.avg
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
