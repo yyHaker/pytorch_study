@@ -186,8 +186,8 @@ def main():
     print("training is done!")
     # save the plot data
     print("save result to plot")
-    write_data_to_file(losses_dict, "loss_dict.pkl")
-    write_data_to_file(prec_dic, "prec_dict.pkl")
+    write_data_to_file(losses_dict, "result/res34/loss_dict.pkl")
+    write_data_to_file(prec_dic, "result/res34/prec_dict.pkl")
 
 
 # training on one epoch
@@ -282,10 +282,10 @@ def validate(val_loader, model, criterion):
     return losses.val, top1.avg, top3.avg
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+def save_checkpoint(state, is_best, filename='result/res34/checkpoint.pth.tar'):
     torch.save(state, filename)
     if is_best:
-        shutil.copyfile(filename, 'model_best.pth.tar')
+        shutil.copyfile(filename, 'result/res34/model_best.pth.tar')
 
 
 class AverageMeter(object):
