@@ -14,7 +14,7 @@ prec_dict = load_data_from_file("result/res34/prec_dict.pkl")
 train_loss, valid_loss = losses_dict["train_loss"], losses_dict["valid_loss"]
 train_p1, train_p3, valid_p1, valid_p3 = prec_dict["train_p1"], \
                                          prec_dict["train_p3"], prec_dict["valid_p1"], prec_dict["valid_p3"]
-
+print(type(train_loss), train_loss)
 assert len(train_loss) == len(valid_loss) and len(train_p1) == len(valid_p1)
 # plot
 epoches = np.arange(1, len(train_loss)+1)
