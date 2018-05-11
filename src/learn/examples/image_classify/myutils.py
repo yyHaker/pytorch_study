@@ -8,6 +8,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import os
 import numpy as np
+import pickle
 
 np.random.seed(1)
 
@@ -49,6 +50,27 @@ def show_image_label_batch(sampled_batch, id2tag):
         # print(labels_batch[i].numpy(), type(labels_batch[i].numpy()))
         id = int(labels_batch[i].numpy())
         plt.text(i * img_size, 0, id2tag[id])
+
+
+def write_data_to_file(data, path):
+    """
+    :param data: the data obj
+    :param path: the store path
+    :return:
+    """
+    with open(path, 'wb') as f:
+        pickle.dump(data, f)
+
+
+def load_data_from_file(path):
+    """
+    :param path: the store path
+    :return:
+    """
+    data_obj = None
+    with open(path, 'rb') as f:
+        data_obj = pickle.load(f)
+    return data_obj
 
 
 if __name__ == "__main__":

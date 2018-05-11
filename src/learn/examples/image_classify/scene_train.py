@@ -13,9 +13,11 @@ import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
 import torchvision.transforms as transforms
-import torchvision.datasets as datasets
+
 import torchvision.models as models
 from dataUtils import ImageSceneData
+from myutils import load_data_from_file, write_data_to_file
+
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -23,7 +25,7 @@ model_names = sorted(name for name in models.__dict__
 
 parser = argparse.ArgumentParser(description='PyTorch scene data Training')
 # parser.add_argument('--data', metavar='DIR', default='image_scene_data/data', help='path to dataset')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet34',
                     choices=model_names,
                     help='model architecture: ' + ' | '.join(model_names) + ' (default: resnet18)')
 parser.add_argument('--num_classes', default=20, type=int,
@@ -146,22 +148,31 @@ def main():
         validate(val_loader, model, criterion)
         return
 
+    # remember some data to plot
+    losses_dict = {"train_loss": [], "valid_loss": []}
+    prec_dic = {"train_p1": [], "train_p3": [], "valid_p1": [], "valid_p3": []}
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
         adjust_learning_rate(optimizer, epoch)
 
         # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch)
+        train_loss, train_p1, train_p3 = train(train_loader, model, criterion, optimizer, epoch)
+        losses_dict["train_loss"].append(train_loss)
+        prec_dic["train_p1"].append(train_p1)
+        prec_dic["train_p3"].append(train_p3)
 
         # evaluate on validation set
-        prec1, prec3 = validate(val_loader, model, criterion)
+        valid_loss, valid_prec1, valid_prec3 = validate(val_loader, model, criterion)
+        losses_dict["valid_loss"].append(valid_loss)
+        prec_dic["valid_p1"].append(valid_prec1)
+        prec_dic["valid_p3"].append(valid_prec3)
 
         # remember best prec@1 and save checkpoint
-        is_best = prec1 > best_prec1
+        is_best = valid_prec1 > best_prec1
         if is_best:
-            best_prec3 = prec3
-        best_prec1 = max(prec1, best_prec1)
+            best_prec3 = valid_prec3
+        best_prec1 = max(valid_prec1, best_prec1)
         save_checkpoint({
             'epoch': epoch + 1,
             'arch': args.arch,
@@ -171,6 +182,11 @@ def main():
         }, is_best)
         print("epoch {}, current the best model valid prec1: {}, prec3: {}".format(
             epoch, best_prec1, best_prec3))
+    print("training is done!")
+    # save the plot data
+    print("save result to plot")
+    write_data_to_file(losses_dict, "loss_dict.pkl")
+    write_data_to_file(prec_dic, "prec_dict.pkl")
 
 
 # training on one epoch
@@ -219,6 +235,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Prec@3 {top3.val:.3f} ({top3.avg:.3f})'.format(
                    epoch, i, len(train_loader), batch_time=batch_time,
                    data_time=data_time, loss=losses, top1=top1, top3=top3))
+    return losses.val, top1.val, top3.val
 
 
 def validate(val_loader, model, criterion):
@@ -261,7 +278,7 @@ def validate(val_loader, model, criterion):
         print(' Valid:  * Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f}'
               .format(top1=top1, top3=top3))
 
-    return top1.avg, top3.avg
+    return losses.val, top1.avg, top3.avg
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
