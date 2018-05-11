@@ -172,6 +172,8 @@ def main():
         # test teh type
         print("type(train_loss): {}, type(train_p1): {}, type(train_p3): {}".format(
             type(train_loss), type(train_p1), type(train_p3)))
+        print("type(valid_loss): {}, type(valid_p1): {}, type(valid_p3): {}".format(
+            type(valid_loss), type(valid_prec1), type(valid_prec3)))
         print("type(loss_dict): {}, type(losses_dict['train_loss']): {})".format(
             type(losses_dict), type(losses_dict["train_loss"])))
 
@@ -242,7 +244,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Prec@3 {top3.val:.3f} ({top3.avg:.3f})'.format(
                    epoch, i, len(train_loader), batch_time=batch_time,
                    data_time=data_time, loss=losses, top1=top1, top3=top3))
-    return losses.val, top1.val, top3.val
+    return losses.val, top1.val.to("cpu"), top3.val.to("cpu")
 
 
 def validate(val_loader, model, criterion):
