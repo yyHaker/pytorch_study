@@ -225,8 +225,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
         # measure accuracy and record loss
         prec1, prec3 = accuracy(output, target, topk=(1, 3))
         losses.update(loss.item(), input.size(0))
-        top1.update(prec1[0], input.size(0))
-        top3.update(prec3[0], input.size(0))
+        top1.update(prec1.item(), input.size(0))
+        top3.update(prec3.item(), input.size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -270,8 +270,8 @@ def validate(val_loader, model, criterion):
             # measure accuracy and record loss
             prec1, prec3 = accuracy(output, target, topk=(1, 3))
             losses.update(loss.item(), input.size(0))
-            top1.update(prec1[0], input.size(0))
-            top3.update(prec3[0], input.size(0))
+            top1.update(prec1.item(), input.size(0))
+            top3.update(prec3.item(), input.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
