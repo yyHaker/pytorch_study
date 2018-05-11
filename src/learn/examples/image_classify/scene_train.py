@@ -19,6 +19,7 @@ import numpy as np
 from dataUtils import ImageSceneData
 from myutils import load_data_from_file, write_data_to_file
 
+cpu_device = torch.device('cpu')
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -171,7 +172,8 @@ def main():
 
         # test teh type
         print("type(train_loss): {}, type(train_p1): {}, type(train_p3): {}, train_p1."
-              "requires_grad: {}, train_p1.device: {}".format(type(train_loss), type(train_p1), type(train_p3), train_p1.requires_grad, train_p1.device))
+              "requires_grad: {}, train_p1.device: {}, train_p1.size(): {}".format(
+            type(train_loss), type(train_p1), type(train_p3), train_p1.requires_grad, train_p1.device, train_p1.size()))
         print("type(valid_loss): {}, type(valid_p1): {}, type(valid_p3): {}".format(
             type(valid_loss), type(valid_prec1), type(valid_prec3)))
         print("type(loss_dict): {}, type(losses_dict['train_loss']): {})".format(
@@ -244,7 +246,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Prec@3 {top3.val:.3f} ({top3.avg:.3f})'.format(
                    epoch, i, len(train_loader), batch_time=batch_time,
                    data_time=data_time, loss=losses, top1=top1, top3=top3))
-    return losses.val, top1.val.to("cpu"), top3.val.to("cpu")
+    return losses.val, top1.val, top3.val
 
 
 def validate(val_loader, model, criterion):
