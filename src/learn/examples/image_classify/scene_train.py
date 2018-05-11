@@ -19,7 +19,6 @@ import numpy as np
 from dataUtils import ImageSceneData
 from myutils import load_data_from_file, write_data_to_file
 
-cpu_device = torch.device('cpu')
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -171,12 +170,12 @@ def main():
         prec_dic["valid_p3"].append(valid_prec3)
 
         # test teh type
-        print("type(train_loss): {}, type(train_p1): {}, type(train_p3): {}".format(
-            type(train_loss), type(train_p1), type(train_p3)))
-        print("type(valid_loss): {}, type(valid_p1): {}, type(valid_p3): {}".format(
-            type(valid_loss), type(valid_prec1), type(valid_prec3)))
-        print("type(loss_dict): {}, type(losses_dict['train_loss']): {})".format(
-            type(losses_dict), type(losses_dict["train_loss"])))
+        # print("type(train_loss): {}, type(train_p1): {}, type(train_p3): {}".format(
+        #    type(train_loss), type(train_p1), type(train_p3)))
+        # print("type(valid_loss): {}, type(valid_p1): {}, type(valid_p3): {}".format(
+        #    type(valid_loss), type(valid_prec1), type(valid_prec3)))
+        # print("type(loss_dict): {}, type(losses_dict['train_loss']): {})".format(
+        #     type(losses_dict), type(losses_dict["train_loss"])))
 
         # remember best prec@1 and save checkpoint
         is_best = valid_prec1 > best_prec1
