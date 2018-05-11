@@ -13,8 +13,9 @@ import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
 import torchvision.transforms as transforms
-
 import torchvision.models as models
+
+import numpy as np
 from dataUtils import ImageSceneData
 from myutils import load_data_from_file, write_data_to_file
 
@@ -158,15 +159,15 @@ def main():
 
         # train for one epoch
         train_loss, train_p1, train_p3 = train(train_loader, model, criterion, optimizer, epoch)
-        losses_dict["train_loss"].append(train_loss)
-        prec_dic["train_p1"].append(train_p1)
-        prec_dic["train_p3"].append(train_p3)
+        losses_dict["train_loss"].append(train_loss.cpu().numpy()[0])
+        prec_dic["train_p1"].append(train_p1.cpu().numpy()[0])
+        prec_dic["train_p3"].append(train_p3.cpu().numpy()[0])
 
         # evaluate on validation set
         valid_loss, valid_prec1, valid_prec3 = validate(val_loader, model, criterion)
-        losses_dict["valid_loss"].append(valid_loss)
-        prec_dic["valid_p1"].append(valid_prec1)
-        prec_dic["valid_p3"].append(valid_prec3)
+        losses_dict["valid_loss"].append(valid_loss.cpu().numpy()[0])
+        prec_dic["valid_p1"].append(valid_prec1.cpu().numpy()[0])
+        prec_dic["valid_p3"].append(valid_prec3.cpu().numpy()[0])
 
         # remember best prec@1 and save checkpoint
         is_best = valid_prec1 > best_prec1
