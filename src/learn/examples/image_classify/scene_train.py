@@ -170,8 +170,8 @@ def main():
         prec_dic["valid_p3"].append(valid_prec3)
 
         # test teh type
-        print("type(train_loss): {}, type(train_p1): {}, type(train_p3): {}".format(
-            type(train_loss), type(train_p1), type(train_p3)))
+        print("type(train_loss): {}, type(train_p1): {}, type(train_p3): {}, train_p1.requires_grad: {}".format(
+            type(train_loss), type(train_p1), type(train_p3), train_p1.requires_grad))
         print("type(valid_loss): {}, type(valid_p1): {}, type(valid_p3): {}".format(
             type(valid_loss), type(valid_prec1), type(valid_prec3)))
         print("type(loss_dict): {}, type(losses_dict['train_loss']): {})".format(
