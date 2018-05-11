@@ -2,9 +2,8 @@
 """
 my utils
 """
-from torchvision import transforms, utils
+from torchvision import utils
 import pandas as pd
-from PIL import Image
 import matplotlib.pyplot as plt
 import os
 import numpy as np
