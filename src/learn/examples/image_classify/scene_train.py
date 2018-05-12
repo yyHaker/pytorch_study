@@ -15,10 +15,10 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.models as models
 
-import numpy as np
 import pandas as pd
+import logging
 from dataUtils import ImageSceneData
-from myutils import load_data_from_file, write_data_to_file
+from myutils import write_data_to_file
 
 # device
 device = torch.device("cuda: 0" if torch.cuda.is_available() else "cpu")
@@ -52,6 +52,8 @@ parser.add_argument('--print_freq', '-p', default=104, type=int,
                     metavar='N', help='print frequency (default: 100 batch)')
 parser.add_argument('--resume', default='result/res34/checkpoint.pth.tar', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
+parser.add_argument('--log_path', default='result/res34/log.log', type=str,
+                    help="path to save logs")
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--pretrained', dest='pretrained', action='store_true',
@@ -70,6 +72,7 @@ best_prec3 = 0
 def main():
     global args, best_prec1, best_prec3
     args = parser.parse_args()
+    logger = logging.getLogger("scene classification")
 
     args.distributed = args.world_size > 1
 
@@ -79,10 +82,10 @@ def main():
 
     # create model
     if args.pretrained:
-        print("=> using pre-trained model '{}'".format(args.arch))
+        logger.info("=> using pre-trained model '{}'".format(args.arch))
         model = models.__dict__[args.arch](pretrained=True, num_classes=args.num_classes)
     else:
-        print("=> creating model '{}'".format(args.arch))
+        logger.info("=> creating model '{}'".format(args.arch))
         model = models.__dict__[args.arch](num_classes=args.num_classes)
 
     if not args.distributed:
@@ -105,17 +108,17 @@ def main():
     # optionally resume from a checkpoint
     if args.resume:
         if os.path.isfile(args.resume):
-            print("=> loading checkpoint '{}'".format(args.resume))
+            logger.info("=> loading checkpoint '{}'".format(args.resume))
             checkpoint = torch.load(args.resume)
             args.start_epoch = checkpoint['epoch']
             best_prec1 = checkpoint['best_prec1']
             best_prec3 = checkpoint['best_prec3']
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
-            print("=> loaded checkpoint '{}' (epoch {})"
-                  .format(args.resume, checkpoint['epoch']))
+            logger.info("=> loaded checkpoint '{}' (epoch {})".format(
+                args.resume, checkpoint['epoch']))
         else:
-            print("=> no checkpoint found at '{}'".format(args.resume))
+            logger.info("=> no checkpoint found at '{}'".format(args.resume))
 
     cudnn.benchmark = True
 
@@ -129,8 +132,6 @@ def main():
                                        transforms.Resize((224, 224)),
                                        transforms.RandomHorizontalFlip(),
                                        transforms.ToTensor(),
-                                       transforms.ColorJitter(),
-                                       normalize,
                                 ]))
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
@@ -196,17 +197,18 @@ def main():
             'best_prec3': best_prec3,
             'optimizer': optimizer.state_dict(),
         }, is_best)
-        print("epoch {}, current the best model valid prec1: {}, prec3: {}".format(
+        logger.info("epoch {}, current the best model valid prec1: {}, prec3: {}".format(
             epoch, best_prec1, best_prec3))
-    print("training is done!")
+    logger.info("training is done!")
     # save the plot data
-    print("save result to plot")
+    logger.info("save result to plot")
     write_data_to_file(losses_dict, "result/res34/loss_dict.pkl")
     write_data_to_file(prec_dic, "result/res34/prec_dict.pkl")
 
 
 # training on one epoch
 def train(train_loader, model, criterion, optimizer, epoch):
+    logger = logging.getLogger("scene classification")
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
@@ -243,7 +245,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         end = time.time()
 
         if i % args.print_freq == 0:
-            print('Epoch: [{0}][{1}/{2}]\t'
+            logger.info('Epoch: [{0}][{1}/{2}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
@@ -255,6 +257,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
 
 def validate(val_loader, model, criterion):
+    logger = logging.getLogger("scene classification")
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
@@ -283,7 +286,7 @@ def validate(val_loader, model, criterion):
             end = time.time()
 
             if i % args.print_freq == 0:
-                print('Valid: [{0}/{1}]\t'
+                logger.info('Valid: [{0}/{1}]\t'
                       'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                       'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                       'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
@@ -291,14 +294,15 @@ def validate(val_loader, model, criterion):
                        i, len(val_loader), batch_time=batch_time, loss=losses,
                        top1=top1, top3=top3))
 
-        print(' Valid:  * Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f}'
-              .format(top1=top1, top3=top3))
+        logger.info(' Valid:  * Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f}'.format(
+            top1=top1, top3=top3))
 
     return losses.val, top1.avg, top3.avg
 
 
 def predict(test_dir, model):
     """predict the result"""
+    logger = logging.getLogger("scene classification")
     list_frame = pd.read_csv(os.path.join(test_dir, 'list.csv'))
     # load data
     test_dataset = ImageSceneData(categories_csv='testa_/categories.csv',
@@ -327,8 +331,32 @@ def predict(test_dir, model):
                 list_frame.iloc[idx+cur_id, 2] = pred[idx, 1]
                 list_frame.iloc[idx+cur_id, 3] = pred[idx, 2]
             cur_id += batch_size
-            print("batch {} test data predict done!".format(i))
-    print("predict all data done!")
+            logger.info("batch {} test data predict done!".format(i))
+    logger.info("predict all data done!")
+
+
+def run():
+    """run the system"""
+    args = parser.parse_args()
+    logger = logging.getLogger("scene classification")
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s-%(name)s-%(levelname)s-%(message)s')
+    if args.log_path:  # logging 不会自己创建目录，但是会自己创建文件
+        log_dir = os.path.dirname(args.log_path)
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+        file_handler = logging.FileHandler(args.log_path)
+        file_handler.setLevel(logging.INFO)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+    # 默认输出到console
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
+    logger.info("Running with args: {}".format(args))
+    main()
 
 
 def save_checkpoint(state, is_best, filename='result/res34/checkpoint.pth.tar'):
@@ -380,4 +408,4 @@ def accuracy(output, target, topk=(1,)):
 
 
 if __name__ == '__main__':
-    main()
+    run()
