@@ -16,9 +16,12 @@ import torchvision.transforms as transforms
 import torchvision.models as models
 
 import numpy as np
+import pandas as pd
 from dataUtils import ImageSceneData
 from myutils import load_data_from_file, write_data_to_file
 
+# device
+device = torch.device("cuda: 0" if torch.cuda.is_available() else "cpu")
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -85,15 +88,15 @@ def main():
     if not args.distributed:
         if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
             model.features = torch.nn.DataParallel(model.features)
-            model.cuda()
+            model.to(device)
         else:
-            model = torch.nn.DataParallel(model).cuda()
+            model = torch.nn.DataParallel(model).to(device)
     else:
-        model.cuda()
+        model.to(device)
         model = torch.nn.parallel.DistributedDataParallel(model)
 
     # define loss function (criterion) and optimizer
-    criterion = nn.CrossEntropyLoss().cuda()
+    criterion = nn.CrossEntropyLoss().to(device)
 
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
@@ -106,6 +109,7 @@ def main():
             checkpoint = torch.load(args.resume)
             args.start_epoch = checkpoint['epoch']
             best_prec1 = checkpoint['best_prec1']
+            best_prec3 = checkpoint['best_prec3']
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             print("=> loaded checkpoint '{}' (epoch {})"
@@ -123,6 +127,8 @@ def main():
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
                                        transforms.Resize((224, 224)),
+                                       transforms.ColorJitter(),
+                                       normalize,
                                        transforms.RandomHorizontalFlip(),
                                        transforms.ToTensor(),
                                 ]))
@@ -187,6 +193,7 @@ def main():
             'arch': args.arch,
             'state_dict': model.state_dict(),
             'best_prec1': best_prec1,
+            'best_prec3': best_prec3,
             'optimizer': optimizer.state_dict(),
         }, is_best)
         print("epoch {}, current the best model valid prec1: {}, prec3: {}".format(
@@ -211,8 +218,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
     end = time.time()
     for i, sample in enumerate(train_loader):
-        input = Variable(sample['image']).cuda()
-        target = Variable(sample['label']).cuda()
+        input = Variable(sample['image']).to(device)
+        target = Variable(sample['label']).to(device)
         # measure data loading time
         data_time.update(time.time() - end)
 
@@ -259,8 +266,8 @@ def validate(val_loader, model, criterion):
     with torch.no_grad():
         end = time.time()
         for i, sample in enumerate(val_loader):
-            input = Variable(sample['image']).cuda()
-            target = Variable(sample['label']).cuda()
+            input = Variable(sample['image']).to(device)
+            target = Variable(sample['label']).to(device)
             # compute output
             output = model(input)
             loss = criterion(output, target)
@@ -288,6 +295,40 @@ def validate(val_loader, model, criterion):
               .format(top1=top1, top3=top3))
 
     return losses.val, top1.avg, top3.avg
+
+
+def predict(test_dir, model):
+    """predict the result"""
+    list_frame = pd.read_csv(os.path.join(test_dir, 'list.csv'))
+    # load data
+    test_dataset = ImageSceneData(categories_csv='testa_/categories.csv',
+                                  list_csv='test_a/list.csv',
+                                  data_root='test_a/data',
+                                  transform=transforms.Compose([
+                                       transforms.Resize((224, 224)),
+                                       transforms.ToTensor(),
+                                   ]))
+    test_loader = torch.utils.data.DataLoader(
+        test_dataset, batch_size=args.batch_size, shuffle=False,
+        num_workers=args.workers, pin_memory=True)
+
+    with torch.no_grad():
+        cur_id = 0
+        for i, image in enumerate(test_loader):
+            input = Variable(image).to(device)
+            # compute output(use top3)
+            output = model(input)  # [batch, 20]
+            # write predict result to file
+            _, pred = output.topk(3, 1, sorted=True, largest=True)  # [batch, 3]
+            batch_size = pred.size(0)
+            pred = pred.to("cpu").numpy()
+            for idx in range(pred.size(0)):
+                list_frame.iloc[idx+cur_id, 1] = pred[idx, 0]
+                list_frame.iloc[idx+cur_id, 2] = pred[idx, 1]
+                list_frame.iloc[idx+cur_id, 3] = pred[idx, 2]
+            cur_id += batch_size
+            print("batch {} test data predict done!".format(i))
+    print("predict all data done!")
 
 
 def save_checkpoint(state, is_best, filename='result/res34/checkpoint.pth.tar'):
