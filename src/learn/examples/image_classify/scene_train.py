@@ -154,6 +154,7 @@ def main():
                                    list_csv='image_scene_data/valid_list.csv',
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
+                                       transforms.Resize(random.randint(256, 480)),
                                        transforms.FiveCrop(224),
                                        transforms.Lambda(lambda crops: torch.stack([
                                            transforms.ToTensor()(crop) for crop in crops]))
