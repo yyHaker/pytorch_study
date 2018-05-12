@@ -127,10 +127,10 @@ def main():
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
                                        transforms.Resize((224, 224)),
-                                       transforms.ColorJitter(),
-                                       normalize,
                                        transforms.RandomHorizontalFlip(),
                                        transforms.ToTensor(),
+                                       transforms.ColorJitter(),
+                                       normalize,
                                 ]))
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
