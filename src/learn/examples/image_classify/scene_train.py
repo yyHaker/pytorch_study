@@ -47,7 +47,7 @@ parser.add_argument('--weight_decay', '--wd', default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)')
 parser.add_argument('--print_freq', '-p', default=104, type=int,
                     metavar='N', help='print frequency (default: 100 batch)')
-parser.add_argument('--resume', default='checkpoint.pth.tar', type=str, metavar='PATH',
+parser.add_argument('--resume', default='result/res34/checkpoint.pth.tar', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
@@ -122,9 +122,9 @@ def main():
                                    list_csv='image_scene_data/train_list.csv',
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
-                                    transforms.RandomResizedCrop(224),
-                                    transforms.RandomHorizontalFlip(),
-                                    transforms.ToTensor(),
+                                       transforms.Resize((224, 224)),
+                                       transforms.RandomHorizontalFlip(),
+                                       transforms.ToTensor(),
                                 ]))
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
@@ -138,7 +138,7 @@ def main():
                                    list_csv='image_scene_data/valid_list.csv',
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
-                                       transforms.RandomResizedCrop(224),
+                                       transforms.Resize((224, 224)),
                                        transforms.ToTensor(),
                                    ]))
     val_loader = torch.utils.data.DataLoader(
