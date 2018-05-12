@@ -21,6 +21,9 @@ import random
 from dataUtils import ImageSceneData, ImageSceneTestData
 from myutils import write_data_to_file
 
+# reproduce
+random.seed(1)
+torch.manual_seed(1)
 # device
 device = torch.device("cuda: 0" if torch.cuda.is_available() else "cpu")
 
@@ -76,9 +79,13 @@ parser.add_argument('--predict', dest='predict', action='store_true',
 best_prec1 = 0  # best precision
 best_prec3 = 0
 
+# remember some data to plot
+losses_dict = {"train_loss": [], "valid_loss": []}
+prec_dict = {"train_p1": [], "train_p3": [], "valid_p1": [], "valid_p3": []}
+
 
 def main():
-    global args, best_prec1, best_prec3
+    global args, best_prec1, best_prec3, losses_dict, prec_dict
     args = parser.parse_args()
     logger = logging.getLogger("scene classification")
 
@@ -121,6 +128,8 @@ def main():
             args.start_epoch = checkpoint['epoch']
             best_prec1 = checkpoint['best_prec1']
             best_prec3 = checkpoint['best_prec3']
+            losses_dict = checkpoint['losses_dict']
+            prec_dict = checkpoint['prec_dict']
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             logger.info("=> loaded checkpoint '{}' (epoch {})".format(
@@ -167,9 +176,6 @@ def main():
         validate(val_loader, model, criterion)
         return
 
-    # remember some data to plot
-    losses_dict = {"train_loss": [], "valid_loss": []}
-    prec_dic = {"train_p1": [], "train_p3": [], "valid_p1": [], "valid_p3": []}
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
@@ -178,14 +184,14 @@ def main():
         # train for one epoch
         train_loss, train_p1, train_p3 = train(train_loader, model, criterion, optimizer, epoch)
         losses_dict["train_loss"].append(train_loss)
-        prec_dic["train_p1"].append(train_p1)
-        prec_dic["train_p3"].append(train_p3)
+        prec_dict["train_p1"].append(train_p1)
+        prec_dict["train_p3"].append(train_p3)
 
         # evaluate on validation set
         valid_loss, valid_prec1, valid_prec3 = validate(val_loader, model, criterion)
         losses_dict["valid_loss"].append(valid_loss)
-        prec_dic["valid_p1"].append(valid_prec1)
-        prec_dic["valid_p3"].append(valid_prec3)
+        prec_dict["valid_p1"].append(valid_prec1)
+        prec_dict["valid_p3"].append(valid_prec3)
 
         # test teh type
         # print("type(train_loss): {}, type(train_p1): {}, type(train_p3): {}".format(
@@ -206,6 +212,8 @@ def main():
             'state_dict': model.state_dict(),
             'best_prec1': best_prec1,
             'best_prec3': best_prec3,
+            'losses_dic': losses_dict,
+            'prec_dict': prec_dict,
             'optimizer': optimizer.state_dict(),
         }, is_best)
         logger.info("epoch {}, current the best model valid prec1: {}, prec3: {}".format(
@@ -214,7 +222,7 @@ def main():
     # save the plot data
     logger.info("save result to plot")
     write_data_to_file(losses_dict, "result/res34/loss_dict.pkl")
-    write_data_to_file(prec_dic, "result/res34/prec_dict.pkl")
+    write_data_to_file(prec_dict, "result/res34/prec_dict.pkl")
 
 
 # training on one epoch
@@ -443,8 +451,14 @@ class AverageMeter(object):
 
 
 def adjust_learning_rate(optimizer, epoch):
-    """Sets the learning rate to the initial LR decayed by 10 every 10 epochs"""
-    lr = args.lr * (0.1 ** (epoch // 10))
+    """Sets the learning rate to the initial LR decayed by 0.1 every 10 epochs"""
+    tmp = args.lr
+    if epoch <= 30:
+        lr = args.lr * (0.1 ** (epoch // 10))
+        tmp = lr
+    elif epoch > 30:
+        lr = tmp * (0.5**((epoch - 30) // 5))
+        tmp = lr
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
