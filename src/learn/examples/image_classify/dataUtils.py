@@ -54,6 +54,35 @@ class ImageSceneData(Dataset):
             self.id2tag[i] = self.categories_frame.iloc[i, 2]
 
 
+class ImageSceneTestData(Dataset):
+    def __init__(self, categories_csv, list_csv, data_root, transform=None):
+        """test data dataset
+        :param categories_csv: string,  path to teh categories csv.
+        :param list_csv: string,  path to the list csv.
+        :param data_root: string, directory with all the image.
+        :param transform: (callable, optional), optional transform to be applied on
+         a sample.
+        """
+        self.categories_frame = pd.read_csv(categories_csv)
+        self.list_frame = pd.read_csv(list_csv)
+        self.data_root = data_root
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.list_frame)
+
+    def __getitem__(self, idx):
+        """通过idx索引到图像"""
+        img_name = os.path.join(self.data_root, self.list_frame.iloc[idx, 0] + ".jpg")
+        image = Image.open(img_name)
+        # convert to same channel(RGB)
+        image = image.convert("RGB")
+        sample = {"image": image}
+        if self.transform:
+            sample['image'] = self.transform(sample['image'])
+        return sample
+
+
 if __name__ == "__main__":
     # transform
     data_transform = transforms.Compose([

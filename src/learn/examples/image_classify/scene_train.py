@@ -17,7 +17,7 @@ import torchvision.models as models
 
 import pandas as pd
 import logging
-from dataUtils import ImageSceneData
+from dataUtils import ImageSceneData, ImageSceneTestData
 from myutils import write_data_to_file
 
 # device
@@ -50,12 +50,14 @@ parser.add_argument('--weight_decay', '--wd', default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)')
 parser.add_argument('--print_freq', '-p', default=104, type=int,
                     metavar='N', help='print frequency (default: 100 batch)')
+
 parser.add_argument('--resume', default='result/res34/checkpoint.pth.tar', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('--log_path', default='result/res34/log.log', type=str,
                     help="path to save logs")
-parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
-                    help='evaluate model on validation set')
+parser.add_argument('--test_dir', default='test_a', type=str,
+                    help='test data dir')
+
 parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                     help='use pre-trained model')
 parser.add_argument('--world_size', default=1, type=int,
@@ -64,6 +66,11 @@ parser.add_argument('--dist_url', default='tcp://224.66.41.62:23456', type=str,
                     help='url used to set up distributed training')
 parser.add_argument('--dist_backend', default='gloo', type=str,
                     help='distributed backend')
+
+parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
+                    help='evaluate model on validation set')
+parser.add_argument('--predict', dest='predict', action='store_true',
+                    help='use  model to do prediction')
 
 best_prec1 = 0  # best precision
 best_prec3 = 0
@@ -300,14 +307,53 @@ def validate(val_loader, model, criterion):
     return losses.val, top1.avg, top3.avg
 
 
-def predict(test_dir, model):
+def predict():
     """predict the result"""
+    args = parser.parse_args()
+    args.distributed = args.world_size > 1
     logger = logging.getLogger("scene classification")
-    list_frame = pd.read_csv(os.path.join(test_dir, 'list.csv'))
+    test_dir = args.test_dir
+
+    # load model
+    logger.info("load models....")
+    # create model
+    if args.pretrained:
+        logger.info("=> using pre-trained model '{}'".format(args.arch))
+        model = models.__dict__[args.arch](pretrained=True, num_classes=args.num_classes)
+    else:
+        logger.info("=> creating model '{}'".format(args.arch))
+        model = models.__dict__[args.arch](num_classes=args.num_classes)
+
+    if not args.distributed:
+        if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
+            model.features = torch.nn.DataParallel(model.features)
+            model.to(device)
+        else:
+            model = torch.nn.DataParallel(model).to(device)
+    else:
+        model.to(device)
+        model = torch.nn.parallel.DistributedDataParallel(model)
+    # torch.load('my_file.pt', map_location=lambda storage, loc: storage)
+    if os.path.isfile(args.resume):
+        logger.info("=> loading checkpoint '{}'".format(args.resume))
+        checkpoint = torch.load(args.resume, map_location=lambda storage, loc: storage)
+        best_prec1 = checkpoint['best_prec1']
+        # best_prec3 = checkpoint['best_prec3']
+        model.load_state_dict(checkpoint['state_dict'])
+        logger.info("About the model, the best valid prec1: {}, prec3: {}".format(best_prec1, best_prec3))
+        logger.info("=> loaded models done!")
+    else:
+        logger.info("=> no checkpoint found at '{}'".format(args.resume))
     # load data
-    test_dataset = ImageSceneData(categories_csv='testa_/categories.csv',
-                                  list_csv='test_a/list.csv',
-                                  data_root='test_a/data',
+    logger.info("load test data....")
+    list_frame = pd.read_csv(os.path.join(test_dir, 'list.csv'))
+    list_frame['CATEGORY_ID0'] = ""
+    list_frame['CATEGORY_ID1'] = ""
+    list_frame['CATEGORY_ID2'] = ""
+
+    test_dataset = ImageSceneTestData(categories_csv=os.path.join(test_dir, "categories.csv"),
+                                  list_csv=os.path.join(test_dir, 'list.csv'),
+                                  data_root=os.path.join(test_dir, "data"),
                                   transform=transforms.Compose([
                                        transforms.Resize((224, 224)),
                                        transforms.ToTensor(),
@@ -315,23 +361,25 @@ def predict(test_dir, model):
     test_loader = torch.utils.data.DataLoader(
         test_dataset, batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
-
     with torch.no_grad():
         cur_id = 0
-        for i, image in enumerate(test_loader):
-            input = Variable(image).to(device)
+        for i, sample in enumerate(test_loader):
+            input = Variable(sample['image']).to(device)
             # compute output(use top3)
             output = model(input)  # [batch, 20]
             # write predict result to file
             _, pred = output.topk(3, 1, sorted=True, largest=True)  # [batch, 3]
             batch_size = pred.size(0)
             pred = pred.to("cpu").numpy()
-            for idx in range(pred.size(0)):
-                list_frame.iloc[idx+cur_id, 1] = pred[idx, 0]
-                list_frame.iloc[idx+cur_id, 2] = pred[idx, 1]
-                list_frame.iloc[idx+cur_id, 3] = pred[idx, 2]
+            # logger.info("type(pred): {}, shape(pred): {}".format(type(pred), pred.shape))
+            # logger.info("pred[0][0]: {}".format(pred[0][0]))
+            for idx in range(batch_size):
+                list_frame.iloc[idx+cur_id, 1] = pred[idx][0]
+                list_frame.iloc[idx+cur_id, 2] = pred[idx][1]
+                list_frame.iloc[idx+cur_id, 3] = pred[idx][2]
             cur_id += batch_size
             logger.info("batch {} test data predict done!".format(i))
+    list_frame.to_csv(os.path.join(test_dir, 'list_predict.csv'), index=False)
     logger.info("predict all data done!")
 
 
@@ -356,7 +404,11 @@ def run():
     logger.addHandler(console_handler)
 
     logger.info("Running with args: {}".format(args))
-    main()
+    # run
+    if args.predict:
+        predict()
+    else:
+        main()
 
 
 def save_checkpoint(state, is_best, filename='result/res34/checkpoint.pth.tar'):
