@@ -17,6 +17,7 @@ import torchvision.models as models
 
 import pandas as pd
 import logging
+import random
 from dataUtils import ImageSceneData, ImageSceneTestData
 from myutils import write_data_to_file
 
@@ -136,8 +137,9 @@ def main():
                                    list_csv='image_scene_data/train_list.csv',
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
-                                       transforms.Resize((224, 224)),
+                                       transforms.Resize(random.randint(256, 480)),
                                        transforms.RandomHorizontalFlip(),
+                                       transforms.RandomCrop(224),
                                        transforms.ToTensor(),
                                 ]))
     if args.distributed:
@@ -152,8 +154,9 @@ def main():
                                    list_csv='image_scene_data/valid_list.csv',
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
-                                       transforms.Resize((224, 224)),
-                                       transforms.ToTensor(),
+                                       transforms.FiveCrop(224),
+                                       transforms.Lambda(lambda crops: torch.stack([
+                                           transforms.ToTensor()(crop) for crop in crops]))
                                    ]))
     val_loader = torch.utils.data.DataLoader(
         valid_dataset, batch_size=args.batch_size, shuffle=False,
@@ -278,8 +281,11 @@ def validate(val_loader, model, criterion):
         for i, sample in enumerate(val_loader):
             input = Variable(sample['image']).to(device)
             target = Variable(sample['label']).to(device)
+            # 5-crop cope with input is a 5d tensor, target is 2d
+            bs, ncrops, c, h, w = input.size()
             # compute output
-            output = model(input)
+            output = model(input.view(-1, c, h, w))  # fuse batch size and ncrops
+            output = output.view(bs, ncrops, -1).mean(1)  # avg over crops
             loss = criterion(output, target)
 
             # measure accuracy and record loss
