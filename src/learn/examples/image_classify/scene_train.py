@@ -212,7 +212,7 @@ def main():
             'state_dict': model.state_dict(),
             'best_prec1': best_prec1,
             'best_prec3': best_prec3,
-            'losses_dic': losses_dict,
+            'losses_dict': losses_dict,
             'prec_dict': prec_dict,
             'optimizer': optimizer.state_dict(),
         }, is_best)
