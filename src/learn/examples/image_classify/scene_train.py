@@ -216,8 +216,8 @@ def main():
             'prec_dict': prec_dict,
             'optimizer': optimizer.state_dict(),
         }, is_best)
-        logger.info("epoch {}, current the best model valid prec1: {}, prec3: {}".format(
-            epoch, best_prec1, best_prec3))
+        logger.info("epoch {}, current the best model valid prec1: {}, prec3: {}, cur learning rate: {}".format(
+            epoch, best_prec1, best_prec3, optimizer.param_groups[0]['lr']))
     logger.info("training is done!")
     # save the plot data
     logger.info("save result to plot")

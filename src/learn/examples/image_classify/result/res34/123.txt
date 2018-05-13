@@ -1,1 +1,9 @@
+transforms.RandomHorizontalFlip(),
+transforms.RandomResizedCrop(224),
+
 res 34
+b 16
+lr 0.01 (adjust)
+momentum 0.9
+weight_decay 1e-4
+
