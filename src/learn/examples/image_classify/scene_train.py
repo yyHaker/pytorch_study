@@ -452,15 +452,15 @@ class AverageMeter(object):
 
 def adjust_learning_rate(optimizer, epoch):
     """adjust the learning rate according to the training process"""
-    tmp = optimizer.param_groups[0]['lr']
+    lr = optimizer.param_groups[0]['lr']
     if epoch <= 30 and epoch % 10 == 0:
-        lr = tmp * 0.1
+        lr = lr * 0.1
     elif epoch <= 40 and epoch % 5 == 0:
-        lr = tmp * 0.5
+        lr = lr * 0.5
     elif epoch <= 50 and epoch % 5 == 0:
-        lr = tmp * 0.8
+        lr = lr * 0.8
     elif epoch % 5 == 0:
-        lr = tmp * 0.9
+        lr = lr * 0.9
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
