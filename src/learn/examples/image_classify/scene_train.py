@@ -40,13 +40,13 @@ parser.add_argument('--num_classes', default=20, type=int,
                     help="num of classes to classify")
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--epochs', default=90, type=int, metavar='N',
+parser.add_argument('--epochs', default=80, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
 parser.add_argument('-b', '--batch_size', default=16, type=int,
                     metavar='N', help='mini-batch size (default: 16)')
-parser.add_argument('--lr', '--learning_rate', default=0.01, type=float,
+parser.add_argument('--lr', '--learning_rate', default=0.1, type=float,
                     metavar='LR', help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
@@ -451,14 +451,16 @@ class AverageMeter(object):
 
 
 def adjust_learning_rate(optimizer, epoch):
-    """Sets the learning rate to the initial LR decayed by 0.1 every 10 epochs"""
-    tmp = args.lr
-    if epoch <= 30:
-        lr = args.lr * (0.1 ** (epoch // 10))
-        tmp = lr
-    elif epoch > 30:
-        lr = tmp * (0.5**((epoch - 30) // 5))
-        tmp = lr
+    """adjust the learning rate according to the training process"""
+    tmp = optimizer.param_groups[0]['lr']
+    if epoch <= 30 and epoch % 10 == 0:
+        lr = tmp * 0.1
+    elif epoch <= 40 and epoch % 5 == 0:
+        lr = tmp * 0.5
+    elif epoch <= 50 and epoch % 5 == 0:
+        lr = tmp * 0.8
+    elif epoch % 5 == 0:
+        lr = tmp * 0.9
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 

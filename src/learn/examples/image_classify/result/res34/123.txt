@@ -1,9 +1,19 @@
+train_data:
+transforms.Resize(random.randint(256, 480)),
 transforms.RandomHorizontalFlip(),
-transforms.RandomResizedCrop(224),
+transforms.RandomCrop(224),
+transforms.ToTensor()
+
+valid_data:
+  transforms.Resize(random.randint(256, 480)),
+transforms.FiveCrop(224),
+transforms.Lambda(lambda crops: torch.stack([
+   transforms.ToTensor()(crop) for crop in crops]))
+
+test_predict:
 
 res 34
 b 16
-lr 0.01 (adjust)
+lr 0.01
 momentum 0.9
 weight_decay 1e-4
-
