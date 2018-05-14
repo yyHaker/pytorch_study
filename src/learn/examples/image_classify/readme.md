@@ -9,5 +9,3 @@
 4. use imagenet to pretrained get good result
 5. data is small while network is large, overfite
 6. epoch 70
-
-todo: use more flexible adjust learning rate.
