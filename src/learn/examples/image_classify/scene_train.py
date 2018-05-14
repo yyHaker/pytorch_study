@@ -22,8 +22,8 @@ from dataUtils import ImageSceneData, ImageSceneTestData
 from myutils import write_data_to_file
 
 # reproduce
-random.seed(1)
-torch.manual_seed(1)
+# random.seed(1)
+# torch.manual_seed(1)
 # device
 device = torch.device("cuda: 0" if torch.cuda.is_available() else "cpu")
 
@@ -36,7 +36,7 @@ parser = argparse.ArgumentParser(description='PyTorch scene data Training')
 parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet34',
                     choices=model_names,
                     help='model architecture: ' + ' | '.join(model_names) + ' (default: resnet18)')
-parser.add_argument('--num_classes', default=20, type=int,
+parser.add_argument('--num_classes', default=1000, type=int,
                     help="num of classes to classify")
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
