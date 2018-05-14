@@ -100,6 +100,7 @@ if __name__ == "__main__":
     image_data_loader = DataLoader(image_data, batch_size=4, shuffle=True,
                                    num_workers=4)
     for i_batch, sampled_batch in enumerate(image_data_loader):
+        # print(len(sampled_batch['image']))
         print(i_batch, sampled_batch['image'].size(), sampled_batch['label'].size())
 
         # observe 4th batch and stop
