@@ -137,7 +137,7 @@ def main():
                                     transforms.ColorJitter(brightness=random.randint(0, 31) / 10.,
                                                            contrast=random.randint(0, 31) / 10.,
                                                            saturation=random.randint(0, 31) / 10.,
-                                                           hue=random.randint(0, 31) / 10.),
+                                                           hue=random.randint(-31, 31) / 62.),
                                     transforms.RandomAffine(random.randint(1, 90)),
                                     transforms.RandomRotation(random.randint(1, 90)),
                                     transforms.RandomCrop(224),
