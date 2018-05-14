@@ -12,6 +12,7 @@ import pandas as pd
 from PIL import Image
 import matplotlib.pyplot as plt
 import os
+import random
 
 from myutils import split_train_valid, show_image_label, \
     show_image_label_batch
@@ -96,8 +97,10 @@ class ImageSceneTestData(Dataset):
 if __name__ == "__main__":
     # transform
     data_transform = transforms.Compose([
-        transforms.RandomSizedCrop(224),
+        transforms.Resize(random.randint(256, 480)),
         transforms.RandomHorizontalFlip(),
+        transforms.RandomVerticalFlip(),
+        transforms.RandomCrop(224),
         transforms.ToTensor(),
     ])
     # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])

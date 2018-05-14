@@ -133,6 +133,7 @@ def main():
                                    transform=transforms.Compose([
                                        transforms.Resize(random.randint(256, 480)),
                                        transforms.RandomHorizontalFlip(),
+                                       transforms.RandomVerticalFlip(),
                                        transforms.RandomCrop(224),
                                        transforms.ToTensor(),
                                 ]))
@@ -309,35 +310,20 @@ def validate(val_loader, model, criterion):
 def predict():
     """predict the result"""
     args = parser.parse_args()
-    args.distributed = args.world_size > 1
     logger = logging.getLogger("scene classification")
     test_dir = args.test_dir
 
     # load model
     logger.info("load models....")
     # create model
-    if args.pretrained:
-        logger.info("=> using pre-trained model '{}'".format(args.arch))
-        model = models.__dict__[args.arch](pretrained=True, num_classes=args.num_classes)
-    else:
-        logger.info("=> creating model '{}'".format(args.arch))
-        model = models.__dict__[args.arch](num_classes=args.num_classes)
-
-    if not args.distributed:
-        if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
-            model.features = torch.nn.DataParallel(model.features)
-            model.to(device)
-        else:
-            model = torch.nn.DataParallel(model).to(device)
-    else:
-        model.to(device)
-        model = torch.nn.parallel.DistributedDataParallel(model)
+    model = make_model(args.arch, num_classes=args.num_classes, pretrained=False)
+    model.to(device)
     # torch.load('my_file.pt', map_location=lambda storage, loc: storage)
     if os.path.isfile(args.resume):
         logger.info("=> loading checkpoint '{}'".format(args.resume))
         checkpoint = torch.load(args.resume, map_location=lambda storage, loc: storage)
         best_prec1 = checkpoint['best_prec1']
-        # best_prec3 = checkpoint['best_prec3']
+        best_prec3 = checkpoint['best_prec3']
         model.load_state_dict(checkpoint['state_dict'])
         logger.info("About the model, the best valid prec1: {}, prec3: {}".format(best_prec1, best_prec3))
         logger.info("=> loaded models done!")
