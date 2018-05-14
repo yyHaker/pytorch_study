@@ -52,6 +52,8 @@ parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
 parser.add_argument('--weight_decay', '--wd', default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)')
+parser.add_argument("--optim", '--op', default='momentum', type=str,
+                    help='use what optimizer ')
 parser.add_argument('--print_freq', '-p', default=104, type=int,
                     metavar='N', help='print frequency (default: 100 batch)')
 
@@ -116,9 +118,13 @@ def main():
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().to(device)
 
-    optimizer = torch.optim.SGD(model.parameters(), args.lr,
-                                momentum=args.momentum,
-                                weight_decay=args.weight_decay)
+    if args.optim == "momentum":
+        optimizer = torch.optim.SGD(model.parameters(), args.lr,
+                                    momentum=args.momentum,
+                                    weight_decay=args.weight_decay)
+    elif args.optim == "adam":
+        optimizer = torch.optim.Adam(model.parameters(), args.lr,
+                                     weight_decay=args.weight_decay)
 
     # optionally resume from a checkpoint
     if args.resume:
@@ -179,6 +185,7 @@ def main():
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
+
         adjust_learning_rate(optimizer, epoch)
 
         # train for one epoch
@@ -454,11 +461,11 @@ def adjust_learning_rate(optimizer, epoch):
     """adjust the learning rate according to the training process"""
     lr = optimizer.param_groups[0]['lr']
     if epoch <= 20 and epoch % 10 == 0:
-        lr = lr * 0.5
+        lr = lr * 1.0
     elif epoch <= 40 and epoch % 5 == 0:
-        lr = lr * 0.8
+        lr = lr * 1.0
     elif epoch <= 50 and epoch % 5 == 0:
-        lr = lr * 0.9
+        lr = lr * 1.0
     elif epoch % 5 == 0:
         lr = lr * 1.0
     for param_group in optimizer.param_groups:
