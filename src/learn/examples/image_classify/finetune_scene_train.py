@@ -137,8 +137,8 @@ def main():
                                        transforms.ToTensor(),
                                 ]))
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
-        num_workers=args.workers, pin_memory=True, sampler=train_sampler)
+        train_dataset, batch_size=args.batch_size, shuffle=True,
+        num_workers=args.workers, pin_memory=True)
 
     valid_dataset = ImageSceneData(categories_csv='image_scene_data/categories.csv',
                                    list_csv='image_scene_data/valid_list.csv',
