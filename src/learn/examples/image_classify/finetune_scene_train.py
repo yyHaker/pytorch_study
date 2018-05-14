@@ -136,10 +136,6 @@ def main():
                                        transforms.RandomCrop(224),
                                        transforms.ToTensor(),
                                 ]))
-    if args.distributed:
-        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
-    else:
-        train_sampler = None
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler)
@@ -162,8 +158,6 @@ def main():
         return
 
     for epoch in range(args.start_epoch, args.epochs):
-        if args.distributed:
-            train_sampler.set_epoch(epoch)
 
         adjust_learning_rate(optimizer, epoch)
 
