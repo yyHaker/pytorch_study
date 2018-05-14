@@ -28,6 +28,8 @@ def split_train_valid(list_csv, rate=0.9):
     valid_list.to_csv('image_scene_data/valid_list.csv', index=False)
     train_list = list_frame.loc[idx_train, :]
     train_list.to_csv('image_scene_data/train_list.csv', index=False)
+    print("train size: {}/{}, valid size: {}/{}".format(train_size,
+                                                        data_size, data_size-train_size, data_size))
     print("save list done")
 
 
@@ -74,4 +76,4 @@ def load_data_from_file(path):
 
 if __name__ == "__main__":
     split_train_valid(list_csv='image_scene_data/list.csv')
-    print(len(os.listdir("image_scene_data/data/")))
+    print("root data image: {}".format(len(os.listdir("image_scene_data/data/"))))
