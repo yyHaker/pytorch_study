@@ -131,11 +131,17 @@ def main():
                                    list_csv='image_scene_data/train_list.csv',
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
-                                       transforms.Resize(random.randint(256, 480)),
-                                       transforms.RandomHorizontalFlip(),
-                                       transforms.RandomVerticalFlip(),
-                                       transforms.RandomCrop(224),
-                                       transforms.ToTensor(),
+                                    transforms.Resize((random.randint(256, 480), random.randint(256, 480))),
+                                    transforms.RandomHorizontalFlip(),
+                                    transforms.RandomVerticalFlip(),
+                                    transforms.ColorJitter(brightness=random.randint(0, 31) / 10.,
+                                                           contrast=random.randint(0, 31) / 10.,
+                                                           saturation=random.randint(0, 31) / 10.,
+                                                           hue=random.randint(0, 31) / 10.),
+                                    transforms.RandomAffine(random.randint(1, 90)),
+                                    transforms.RandomRotation(random.randint(1, 90)),
+                                    transforms.RandomCrop(224),
+                                    transforms.ToTensor(),
                                 ]))
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=True,
@@ -147,7 +153,8 @@ def main():
                                    list_csv='image_scene_data/valid_list.csv',
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
-                                       transforms.Resize(random.randint(256, 480)),
+                                       transforms.Resize((random.randint(256, 480), random.randint(256, 480))),
+                                       transforms.RandomHorizontalFlip(),
                                        transforms.FiveCrop(224),
                                        transforms.Lambda(lambda crops: torch.stack([
                                            transforms.ToTensor()(crop) for crop in crops]))

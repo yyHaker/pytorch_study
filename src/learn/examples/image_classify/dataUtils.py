@@ -97,9 +97,15 @@ class ImageSceneTestData(Dataset):
 if __name__ == "__main__":
     # transform
     data_transform = transforms.Compose([
-        transforms.Resize(random.randint(256, 480)),
+        transforms.Resize((random.randint(256, 480), random.randint(256, 480))),
         transforms.RandomHorizontalFlip(),
         transforms.RandomVerticalFlip(),
+        transforms.ColorJitter(brightness=random.randint(0, 31) / 10.,
+                               contrast=random.randint(0, 31) / 10.,
+                               saturation=random.randint(0, 31) / 10.,
+                               hue=random.randint(0, 31) / 10.),
+        transforms.RandomAffine(random.randint(1, 90)),
+        transforms.RandomRotation(random.randint(1, 90)),
         transforms.RandomCrop(224),
         transforms.ToTensor(),
     ])
