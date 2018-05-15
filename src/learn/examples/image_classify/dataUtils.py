@@ -53,6 +53,16 @@ class ImageSceneData(Dataset):
         for i in range(20):
             self.id2tag[i] = self.categories_frame.iloc[i, 2]
 
+    def analyze_data(self):
+        size = len(self.list_frame)
+        count_dict = {}
+        for i in range(20):
+            count_dict[self.id2tag[i]] = 0
+        for i in range(size):
+            tag_name = self.id2tag[self.list_frame.iloc[i, 1]]
+            count_dict[tag_name] += 1
+        return count_dict
+
 
 class ImageSceneTestData(Dataset):
     def __init__(self, categories_csv, list_csv, data_root, transform=None):

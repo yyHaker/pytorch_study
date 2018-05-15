@@ -140,6 +140,8 @@ def main():
         train_dataset, batch_size=args.batch_size, shuffle=True,
         num_workers=args.workers, pin_memory=True)
 
+    logger.info("train data analyze:{}".format(train_dataset.analyze_data()))
+
     valid_dataset = ImageSceneData(categories_csv='image_scene_data/categories.csv',
                                    list_csv='image_scene_data/valid_list.csv',
                                    data_root='image_scene_data/data',
@@ -152,6 +154,8 @@ def main():
     val_loader = torch.utils.data.DataLoader(
         valid_dataset, batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
+
+    logger.info("valid data analyze: {}".format(valid_dataset.analyze_data()))
 
     if args.evaluate:
         validate(val_loader, model, criterion)
