@@ -133,7 +133,6 @@ def main():
                                    transform=transforms.Compose([
                                     transforms.Resize((random.randint(256, 480), random.randint(256, 480))),
                                     transforms.RandomHorizontalFlip(),
-                                    transforms.RandomVerticalFlip(),
                                     transforms.RandomCrop(224),
                                     transforms.ToTensor(),
                                 ]))
@@ -147,8 +146,8 @@ def main():
                                    list_csv='image_scene_data/valid_list.csv',
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
-                                       transforms.Resize((random.randint(256, 480), random.randint(256, 480))),
-                                       transforms.RandomHorizontalFlip(),
+                                       transforms.Resize((random.sample([224, 256, 384, 480, 640], 1)[0],
+                                                          random.sample([224, 256, 384, 480, 640], 1)[0])),
                                        transforms.FiveCrop(224),
                                        transforms.Lambda(lambda crops: torch.stack([
                                            transforms.ToTensor()(crop) for crop in crops]))
@@ -341,8 +340,11 @@ def predict():
                                   list_csv=os.path.join(test_dir, 'list.csv'),
                                   data_root=os.path.join(test_dir, "data"),
                                   transform=transforms.Compose([
-                                       transforms.Resize((224, 224)),
-                                       transforms.ToTensor(),
+                                      transforms.Resize((random.sample([224, 256, 384, 480, 640], 1)[0],
+                                                         random.sample([224, 256, 384, 480, 640], 1)[0])),
+                                      transforms.FiveCrop(224),
+                                      transforms.Lambda(lambda crops: torch.stack([
+                                          transforms.ToTensor()(crop) for crop in crops]))
                                    ]))
     test_loader = torch.utils.data.DataLoader(
         test_dataset, batch_size=args.batch_size, shuffle=False,
@@ -351,8 +353,12 @@ def predict():
         cur_id = 0
         for i, sample in enumerate(test_loader):
             input = Variable(sample['image']).to(device)
+            # 5-crop cope with input is a 5d tensor, target is 2d
+            bs, ncrops, c, h, w = input.size()
+            # compute output
+            output = model(input.view(-1, c, h, w))  # fuse batch size and ncrops
+            output = output.view(bs, ncrops, -1).mean(1)  # avg over crops [batch, 20]
             # compute output(use top3)
-            output = model(input)  # [batch, 20]
             # write predict result to file
             _, pred = output.topk(3, 1, sorted=True, largest=True)  # [batch, 3]
             batch_size = pred.size(0)

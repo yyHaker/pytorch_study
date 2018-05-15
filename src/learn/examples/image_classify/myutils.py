@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 import pickle
+import random
 
 np.random.seed(1)
 
@@ -77,3 +78,4 @@ def load_data_from_file(path):
 if __name__ == "__main__":
     split_train_valid(list_csv='image_scene_data/list.csv')
     print("root data image: {}".format(len(os.listdir("image_scene_data/data/"))))
+    # print(random.sample([224, 256, 384, 480, 640], 1))
