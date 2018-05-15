@@ -134,8 +134,6 @@ def main():
                                     transforms.Resize((random.randint(256, 480), random.randint(256, 480))),
                                     transforms.RandomHorizontalFlip(),
                                     transforms.RandomVerticalFlip(),
-                                    transforms.RandomAffine(random.randint(1, 90)),
-                                    transforms.RandomRotation(random.randint(1, 90)),
                                     transforms.RandomCrop(224),
                                     transforms.ToTensor(),
                                 ]))
