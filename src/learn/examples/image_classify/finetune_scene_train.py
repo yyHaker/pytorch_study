@@ -39,39 +39,39 @@ model_names = sorted(name for name in models.__dict__
 
 parser = argparse.ArgumentParser(description='PyTorch fine tune scene data Training')
 # parser.add_argument('--data', metavar='DIR', default='image_scene_data/data', help='path to dataset')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet34',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet50',
                     choices=model_names,
-                    help='model architecture: ' + ' | '.join(model_names) + ' (default: resnet34)')
+                    help='model architecture: ' + ' | '.join(model_names) + ' (default: resnet50)')
 parser.add_argument('--num_classes', default=20, type=int,
-                    help="num of classes to classify")
+                    help="num of classes to classify (default: 20)")
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--epochs', default=50, type=int, metavar='N',
-                    help='number of total epochs to run')
+                    help='number of total epochs to run (default: 50)')
 parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
 parser.add_argument('-b', '--batch_size', default=64, type=int,
                     metavar='N', help='mini-batch size (default: 64)')
 parser.add_argument('--lr', '--learning_rate', default=0.0001, type=float,
-                    metavar='LR', help='initial learning rate')
+                    metavar='LR', help='initial learning rate (default 0.0001)')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
-                    help='momentum')
+                    help='momentum (default: 0.9)')
 parser.add_argument('--weight_decay', '--wd', default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)')
 parser.add_argument("--optim", '--op', default='momentum', type=str,
-                    help='use what optimizer ')
+                    help='use what optimizer (default: momentum)')
 parser.add_argument('--print_freq', '-p', default=104, type=int,
-                    metavar='N', help='print frequency (default: 100 batch)')
+                    metavar='N', help='print frequency (default: 104 batch)')
 
 parser.add_argument('--resume', default='result/res34/checkpoint.pth.tar', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('--log_path', default='result/res34/log.log', type=str,
-                    help="path to save logs")
+                    help="path to save logs (default: result/res34/log.log)")
 parser.add_argument('--test_dir', default='test_a', type=str,
-                    help='test data dir')
+                    help='test data dir (default: test_a)')
 
 parser.add_argument('--pretrained', dest='pretrained', default=True, action='store_true',
-                    help='use pre-trained model')
+                    help='use pre-trained model (default: true)')
 
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
@@ -430,12 +430,12 @@ class AverageMeter(object):
 def adjust_learning_rate(optimizer, epoch):
     """adjust the learning rate according to the training process"""
     lr = optimizer.param_groups[0]['lr']
-    if epoch <= 20 and epoch % 10 == 0:
+    if epoch <= 50 and epoch % 10 == 0:
         lr = lr * 1.0
-    elif epoch <= 40 and epoch % 5 == 0:
-        lr = lr * 1.0
-    elif epoch <= 50 and epoch % 5 == 0:
-        lr = lr * 1.0
+    elif epoch <= 70 and epoch % 10 == 0:
+        lr = lr * 0.5
+    elif epoch <= 90 and epoch % 10 == 0:
+        lr = lr * 0.8
     elif epoch % 5 == 0:
         lr = lr * 1.0
     for param_group in optimizer.param_groups:
