@@ -12,7 +12,6 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
-import torch.distributed as dist
 import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
@@ -25,7 +24,7 @@ import pandas as pd
 import logging
 import random
 from dataUtils import ImageSceneData, ImageSceneTestData
-from myutils import write_data_to_file
+from myutils import write_data_to_file, random_noise, pca_Jittering
 
 # reproduce
 # random.seed(1)
@@ -132,8 +131,10 @@ def main():
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
                                     transforms.Resize((random.randint(256, 480), random.randint(256, 480))),
+                                    transforms.Lambda(pca_Jittering),
                                     transforms.RandomHorizontalFlip(),
                                     transforms.RandomCrop(224),
+                                    # transforms.Lambda(random_noise),
                                     transforms.ToTensor(),
                                 ]))
     train_loader = torch.utils.data.DataLoader(
@@ -148,7 +149,7 @@ def main():
                                    transform=transforms.Compose([
                                        transforms.Resize((random.sample([224, 256, 384, 480, 640], 1)[0],
                                                           random.sample([224, 256, 384, 480, 640], 1)[0])),
-                                       transforms.FiveCrop(224),
+                                       transforms.TenCrop(224),
                                        transforms.Lambda(lambda crops: torch.stack([
                                            transforms.ToTensor()(crop) for crop in crops]))
                                    ]))
@@ -275,7 +276,7 @@ def validate(val_loader, model, criterion):
         for i, sample in enumerate(val_loader):
             input = Variable(sample['image']).to(device)
             target = Variable(sample['label']).to(device)
-            # 5-crop cope with input is a 5d tensor, target is 2d
+            # 10-crop cope with input is a 10d tensor, target is 2d
             bs, ncrops, c, h, w = input.size()
             # compute output
             output = model(input.view(-1, c, h, w))  # fuse batch size and ncrops
@@ -343,7 +344,7 @@ def predict():
                                   transform=transforms.Compose([
                                       transforms.Resize((random.sample([224, 256, 384, 480, 640], 1)[0],
                                                          random.sample([224, 256, 384, 480, 640], 1)[0])),
-                                      transforms.FiveCrop(224),
+                                      transforms.TenCrop(224),
                                       transforms.Lambda(lambda crops: torch.stack([
                                           transforms.ToTensor()(crop) for crop in crops]))
                                    ]))
@@ -432,7 +433,7 @@ def adjust_learning_rate(optimizer, epoch):
     """adjust the learning rate according to the training process"""
     lr = optimizer.param_groups[0]['lr']
     if epoch == 60:
-        lr = lr * 0.5
+        lr = lr * 1.0
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 

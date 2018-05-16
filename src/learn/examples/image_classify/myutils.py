@@ -10,6 +10,7 @@ import numpy as np
 import pickle
 import random
 from PIL import Image
+import skimage
 np.random.seed(1)
 
 
@@ -99,9 +100,21 @@ def pca_Jittering(img):
         [img[:, :, 0] + add_num[0], img[:, :, 1] + add_num[1], img[:, :, 2] + add_num[2]])
     img2 = np.swapaxes(img2, 0, 2)
     img2 = np.swapaxes(img2, 0, 1)
+    img2 *= 255
     img2 = Image.fromarray(np.uint8(img2))
 
     return img2
+
+
+def random_noise(img, p=0.1):
+    a = random.random()
+    if a < p:
+        img = np.asarray(img, dtype='float32')
+        img /= 255
+        img = skimage.util.random_noise(img, mode='gaussian', seed=None, clip=True)
+        img *= 255
+        img = Image.fromarray(np.uint8(img))
+    return img
 
 
 if __name__ == "__main__":
