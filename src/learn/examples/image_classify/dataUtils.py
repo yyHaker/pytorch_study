@@ -15,7 +15,7 @@ import os
 import random
 
 from myutils import split_train_valid, show_image_label, \
-    show_image_label_batch
+    show_image_label_batch, pca_Jittering
 
 
 class ImageSceneData(Dataset):
@@ -95,11 +95,13 @@ class ImageSceneTestData(Dataset):
 
 
 if __name__ == "__main__":
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     # transform
     data_transform = transforms.Compose([
         transforms.Resize((random.randint(256, 480), random.randint(256, 480))),
         transforms.RandomHorizontalFlip(),
-        transforms.RandomVerticalFlip(),
+        # transforms.ColorJitter(),
+        # transforms.RandomVerticalFlip(),
         # transforms.RandomAffine(random.randint(1, 90)),
         # transforms.RandomRotation(random.randint(1, 90)),
         transforms.RandomCrop(224),

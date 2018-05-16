@@ -9,7 +9,7 @@ import os
 import numpy as np
 import pickle
 import random
-
+from PIL import Image
 np.random.seed(1)
 
 
@@ -73,6 +73,35 @@ def load_data_from_file(path):
     with open(path, 'rb') as f:
         data_obj = pickle.load(f)
     return data_obj
+
+
+def pca_Jittering(img):
+    """
+    Apply pca jittering  to the PIL img.
+    :param img:
+    :return:
+    """
+    img = np.asarray(img, dtype='float32')
+    img /= 255
+    img_size = img.size // 3
+    img1 = img.reshape(img_size, 3)
+    img1 = np.transpose(img1)
+    img_cov = np.cov([img1[0], img1[1], img1[2]])
+    lamda, p = np.linalg.eig(img_cov)
+    p = np.transpose(p)
+    alpha1 = random.normalvariate(0, 0.3)
+    alpha2 = random.normalvariate(0, 0.3)
+    alpha3 = random.normalvariate(0, 0.3)
+    v = np.transpose(
+        (alpha1 * lamda[0], alpha2 * lamda[1], alpha3 * lamda[2]))
+    add_num = np.dot(p, v)
+    img2 = np.array(
+        [img[:, :, 0] + add_num[0], img[:, :, 1] + add_num[1], img[:, :, 2] + add_num[2]])
+    img2 = np.swapaxes(img2, 0, 2)
+    img2 = np.swapaxes(img2, 0, 1)
+    img2 = Image.fromarray(np.uint8(img2))
+
+    return img2
 
 
 if __name__ == "__main__":
