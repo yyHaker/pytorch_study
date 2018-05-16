@@ -131,10 +131,10 @@ def main():
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
                                     transforms.Resize((random.randint(256, 480), random.randint(256, 480))),
-                                    transforms.Lambda(pca_Jittering),
+                                    # transforms.Lambda(pca_Jittering),
                                     transforms.RandomHorizontalFlip(),
                                     transforms.RandomCrop(224),
-                                    # transforms.Lambda(random_noise),
+                                    transforms.Lambda(random_noise),
                                     transforms.ToTensor(),
                                 ]))
     train_loader = torch.utils.data.DataLoader(

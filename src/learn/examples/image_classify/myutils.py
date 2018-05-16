@@ -101,6 +101,8 @@ def pca_Jittering(img):
     img2 = np.swapaxes(img2, 0, 2)
     img2 = np.swapaxes(img2, 0, 1)
     img2 *= 255
+    print(type(img2), img2.shape)
+
     img2 = Image.fromarray(np.uint8(img2))
 
     return img2
