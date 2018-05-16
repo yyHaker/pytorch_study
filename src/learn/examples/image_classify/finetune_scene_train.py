@@ -149,7 +149,7 @@ def main():
                                    transform=transforms.Compose([
                                        transforms.Resize((random.sample([224, 256, 384, 480, 640], 1)[0],
                                                           random.sample([224, 256, 384, 480, 640], 1)[0])),
-                                       transforms.TenCrop(224),
+                                       transforms.FiveCrop(224),
                                        transforms.Lambda(lambda crops: torch.stack([
                                            transforms.ToTensor()(crop) for crop in crops]))
                                    ]))
