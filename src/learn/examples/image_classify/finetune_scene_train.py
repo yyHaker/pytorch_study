@@ -67,8 +67,8 @@ parser.add_argument('--resume', default='result/res34/checkpoint.pth.tar', type=
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('--log_path', default='result/res34/log.log', type=str,
                     help="path to save logs (default: result/res34/log.log)")
-parser.add_argument('--test_dir', default='test_a', type=str,
-                    help='test data dir (default: test_a)')
+parser.add_argument('--test_dir', default='test_b', type=str,
+                    help='test data dir (default: test_b)')
 
 parser.add_argument('--pretrained', dest='pretrained', default=True, action='store_true',
                     help='use pre-trained model (default: true)')
@@ -187,10 +187,10 @@ def main():
         #     type(losses_dict), type(losses_dict["train_loss"])))
 
         # remember best prec@1 and save checkpoint
-        is_best = valid_prec1 > best_prec1
+        is_best = valid_prec1 > best_prec1 and valid_prec3 > best_prec3
         if is_best:
+            best_prec1 = valid_prec1
             best_prec3 = valid_prec3
-        best_prec1 = max(valid_prec1, best_prec1)
         save_checkpoint({
             'epoch': epoch + 1,
             'arch': args.arch,
@@ -319,16 +319,17 @@ def predict():
     model = make_model(args.arch, num_classes=args.num_classes, pretrained=False)
     model.to(device)
     # torch.load('my_file.pt', map_location=lambda storage, loc: storage)
-    if os.path.isfile(args.resume):
-        logger.info("=> loading checkpoint '{}'".format(args.resume))
-        checkpoint = torch.load(args.resume, map_location=lambda storage, loc: storage)
+    best_model_path = 'result/res34/model_best.pth.tar'
+    if os.path.isfile(best_model_path):
+        logger.info("=> loading checkpoint '{}'".format(best_model_path))
+        checkpoint = torch.load(best_model_path, map_location=lambda storage, loc: storage)
         best_prec1 = checkpoint['best_prec1']
         best_prec3 = checkpoint['best_prec3']
         model.load_state_dict(checkpoint['state_dict'])
-        logger.info("About the model, the best valid prec1: {}, prec3: {}".format(best_prec1, best_prec3))
-        logger.info("=> loaded models done!")
+        logger.info("About the model, the best valid prec1: {}, prec3: {}, get on epoch: {}".format(best_prec1, best_prec3, checkpoint['epoch']))
+        logger.info("=> loaded best models done!")
     else:
-        logger.info("=> no checkpoint found at '{}'".format(args.resume))
+        logger.info("=> no models found at '{}'".format(best_model_path))
     # load data
     logger.info("load test data....")
     list_frame = pd.read_csv(os.path.join(test_dir, 'list.csv'))
@@ -433,9 +434,9 @@ def adjust_learning_rate(optimizer, epoch):
     if epoch <= 50 and epoch % 10 == 0:
         lr = lr * 1.0
     elif epoch <= 70 and epoch % 10 == 0:
-        lr = lr * 0.5
+        lr = lr * 1.0
     elif epoch <= 90 and epoch % 10 == 0:
-        lr = lr * 0.8
+        lr = lr * 1.0
     elif epoch % 5 == 0:
         lr = lr * 1.0
     for param_group in optimizer.param_groups:

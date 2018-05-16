@@ -7,13 +7,15 @@
 
 ## 2) 软硬件要求
 软件
+- cuda 9.0 + cudnn 7.0
 - pytorch 0.4.0
 - torchvision 0.2.1
 - cnn_finetune 0.3
 - logging 0.5.1
+- argparse
+- shutil
 - numpy, scipy, matplotlib, pandas
 - python 3.6(建议直接装anaconda5.1)
-- cuda 9.0 + cudnn 7.0
 
 硬件
 - cpu 内存8G以上
@@ -33,7 +35,7 @@ valid(查看image_scene_data目录下是否有train_list.csv和valid_list.csv,
     python  finetune_scene_train.py  --arch res50 --epochs 100
 
 
-（3）预测,  (确保模型文件在相应目录下)
+（3）预测,  (确保模型文件在相应目录下, 可指定测试数据目录)
  
     python  finetune_scene_train.py --predict --test_dir test_b
   
@@ -77,7 +79,7 @@ valid(查看image_scene_data目录下是否有train_list.csv和valid_list.csv,
           --print_freq N, -p N  print frequency (default: 104 batch)
           --resume PATH         path to latest checkpoint (default: none)
           --log_path LOG_PATH   path to save logs (default: result/res34/log.log)
-          --test_dir TEST_DIR   test data dir (default: test_a)
+          --test_dir TEST_DIR   test data dir (default: test_b)
           --pretrained          use pre-trained model (default: true)
           -e, --evaluate        evaluate model on validation set
           --predict             use model to do prediction
@@ -86,3 +88,23 @@ valid(查看image_scene_data目录下是否有train_list.csv和valid_list.csv,
 
 ## 4）涉及到的非官方提供的数据集及其获取方式
   无, 所使用数据均是来自比赛提供的数据
+  
+## 5) 提交目录文件说明
+
+ - image_scene_data：  存放训练数据目录
+ - result/res34/： 存放日志、数据、保存的模型目录
+ 
+    - 123.txt：  简单说明文件
+    - checkpoint.pth.tar: 保存模型参数、相关数据等（用于resume）
+    - model_best.pth.tar:  当前最好的模型
+    - log.log: 日志文件
+    - loss_dict.pkl: loss数据文件
+    - prec_dict.pkl: prec数据文件
+ - testa: 测试集合A目录
+ - testb:  测试集合B目录
+ - dataUtils.py:  管理加载数据的模块
+ - finetune_scene_train.py: 模型训练、模型预测的主要模块
+ - myutils.py:  工具类
+ - plot_result.py: 可视化训练数据的模块
+ - README.md:  说明文件
+ 
