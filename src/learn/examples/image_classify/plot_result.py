@@ -8,8 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from myutils import load_data_from_file
 
-losses_dict = load_data_from_file("result/res34/loss_dict.pkl")
-prec_dict = load_data_from_file("result/res34/prec_dict.pkl")
+losses_dict = load_data_from_file("result/loss_dict.pkl")
+prec_dict = load_data_from_file("result/prec_dict.pkl")
 
 train_loss, valid_loss = losses_dict["train_loss"], losses_dict["valid_loss"]
 train_p1, train_p3, valid_p1, valid_p3 = prec_dict["train_p1"], \

@@ -2,8 +2,8 @@
 
 
 ## 1) 软件概述
-   为了完成该image scene classification的任务，经过多次训练与选择， 我最终采用的是resnet深度神经网络，
-   特别的我用的是resnet50，并在imagenet finetune的情况下针对该数据集进行训练测试.
+   为了完成该image scene classification的任务，经过多次训练与选择， 我最终采用的是resnet深度神经网络模型，
+   特别的我用的是resnet50，并在imagenet finetune的情况下针对大赛该数据集进行训练测试，最终取得了不错的效果。
 
 ## 2) 软硬件要求
 软件
@@ -14,6 +14,7 @@
 - logging 0.5.1
 - argparse
 - shutil
+- scikit-image
 - numpy, scipy, matplotlib, pandas
 - python 3.6(建议直接装anaconda5.1)
 
@@ -32,7 +33,7 @@ valid(查看image_scene_data目录下是否有train_list.csv和valid_list.csv,
 
 （2）训练，(第一次运行会自动下载imagenet预训练模型)
 
-    python  finetune_scene_train.py  --arch res50 --epochs 100
+    python  finetune_scene_train.py  --arch resnet50 --epochs 100
 
 
 （3）预测,  (确保模型文件在相应目录下, 可指定测试数据目录)

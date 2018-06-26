@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 the image scene data manager.
-(16623 images)
+(16612 images)
 """
 import torch
 from torch.utils.data import Dataset

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-use cnn_finetune to finetune our network.
+choose ImageNet models.
+222.32.72.69
 """
 import argparse
 import os
@@ -45,13 +46,14 @@ parser.add_argument('--num_classes', default=20, type=int,
                     help="num of classes to classify (default: 20)")
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
+
 parser.add_argument('--epochs', default=50, type=int, metavar='N',
                     help='number of total epochs to run (default: 50)')
 parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
 parser.add_argument('-b', '--batch_size', default=64, type=int,
                     metavar='N', help='mini-batch size (default: 64)')
-parser.add_argument('--lr', '--learning_rate', default=0.0001, type=float,
+parser.add_argument('--lr', '--learning_rate', default=0.01, type=float,
                     metavar='LR', help='initial learning rate (default 0.0001)')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum (default: 0.9)')
@@ -59,13 +61,14 @@ parser.add_argument('--weight_decay', '--wd', default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)')
 parser.add_argument("--optim", '--op', default='momentum', type=str,
                     help='use what optimizer (default: momentum)')
-parser.add_argument('--print_freq', '-p', default=104, type=int,
-                    metavar='N', help='print frequency (default: 104 batch)')
+parser.add_argument('--print_freq', '-p', default=100, type=int,
+                    metavar='N', help='print frequency (default: 100 batch)')
 
-parser.add_argument('--resume', default='result/res34/checkpoint.pth.tar', type=str, metavar='PATH',
-                    help='path to latest checkpoint (default: none)')
-parser.add_argument('--log_path', default='result/res34/log.log', type=str,
-                    help="path to save logs (default: result/res34/log.log)")
+parser.add_argument('--resume', default='result/checkpoint.pth.tar', type=str, metavar='PATH',
+                    help='path to latest checkpoint (default: result/checkpoint.pth.tar)')
+parser.add_argument('--log_path', default='result/log.log', type=str,
+                    help="path to save logs (default: result/log.log)")
+
 parser.add_argument('--test_dir', default='test_b', type=str,
                     help='test data dir (default: test_b)')
 
@@ -74,6 +77,7 @@ parser.add_argument('--pretrained', dest='pretrained', default=True, action='sto
 
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
+
 parser.add_argument('--predict', dest='predict', action='store_true',
                     help='use  model to do prediction')
 
@@ -91,7 +95,8 @@ def main():
     logger = logging.getLogger("scene classification")
 
     # create model
-    model = make_model(args.arch, num_classes=args.num_classes, pretrained=args.pretrained)
+    model = make_model(args.arch, num_classes=args.num_classes, input_size=(224, 224),
+                       pretrained=args.pretrained)
     model.to(device)
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().to(device)
@@ -130,8 +135,9 @@ def main():
                                    list_csv='image_scene_data/train_list.csv',
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
+                                    # transforms.Resize((224, 224)),
                                     transforms.Resize((random.randint(256, 480), random.randint(256, 480))),
-                                    transforms.Lambda(pca_Jittering),
+                                    # transforms.Lambda(pca_Jittering),
                                     # transforms.RandomHorizontalFlip(),
                                     transforms.RandomCrop(224),
                                     # transforms.Lambda(random_noise),
@@ -147,6 +153,7 @@ def main():
                                    list_csv='image_scene_data/valid_list.csv',
                                    data_root='image_scene_data/data',
                                    transform=transforms.Compose([
+                                       # transforms.Resize((224, 224)),
                                        transforms.Resize((random.sample([224, 256, 384, 480, 640], 1)[0],
                                                           random.sample([224, 256, 384, 480, 640], 1)[0])),
                                        transforms.FiveCrop(224),
@@ -164,7 +171,7 @@ def main():
         return
 
     for epoch in range(args.start_epoch, args.epochs):
-
+        # adjust lr
         adjust_learning_rate(optimizer, epoch)
 
         # train for one epoch
@@ -204,11 +211,13 @@ def main():
         }, is_best)
         logger.info("epoch {}, current the best model valid prec1: {}, prec3: {}, cur learning rate: {}".format(
             epoch, best_prec1, best_prec3, optimizer.param_groups[0]['lr']))
+        # early stop
+
     logger.info("training is done!")
     # save the plot data
     logger.info("save result to plot")
-    write_data_to_file(losses_dict, "result/res34/loss_dict.pkl")
-    write_data_to_file(prec_dict, "result/res34/prec_dict.pkl")
+    write_data_to_file(losses_dict, "result/loss_dict.pkl")
+    write_data_to_file(prec_dict, "result/prec_dict.pkl")
 
 
 # training on one epoch
@@ -320,7 +329,7 @@ def predict():
     model = make_model(args.arch, num_classes=args.num_classes, pretrained=False)
     model.to(device)
     # torch.load('my_file.pt', map_location=lambda storage, loc: storage)
-    best_model_path = 'result/res34/model_best.pth.tar'
+    best_model_path = 'result/model_best.pth.tar'
     if os.path.isfile(best_model_path):
         logger.info("=> loading checkpoint '{}'".format(best_model_path))
         checkpoint = torch.load(best_model_path, map_location=lambda storage, loc: storage)
@@ -405,10 +414,10 @@ def run():
         main()
 
 
-def save_checkpoint(state, is_best, filename='result/res34/checkpoint.pth.tar'):
+def save_checkpoint(state, is_best, filename='result/checkpoint.pth.tar'):
     torch.save(state, filename)
     if is_best:
-        shutil.copyfile(filename, 'result/res34/model_best.pth.tar')
+        shutil.copyfile(filename, 'result/model_best.pth.tar')
 
 
 class AverageMeter(object):
